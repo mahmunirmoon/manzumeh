@@ -1,0 +1,76 @@
+# Deploys the production build (dist/) to GitHub Pages for the repository "manzumeh".
+#
+# One-time repo setup (Settings → Pages):
+#   Source: "GitHub Actions"
+#
+# The app is served at https://<username>.github.io/manzumeh/, so Vite is built
+# with a relative base (--base=./) — assets resolve correctly under the repo
+# sub-path without hard-coding it (and without editing vite.config.js).
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+# Allow only one concurrent deployment, but don't cancel in-progress builds.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (relative base for the /manzumeh/ sub-path)
+        run: npm run build -- --base=./
+
+      - name: Verify production build has no /src/main.tsx references
+        run: |
+          echo "Scanning dist/ for dev-source references..."
+          if grep -rn "src/main.tsx" dist/; then
+            echo "::error::Production build still references /src/main.tsx"
+            exit 1
+          fi
+          if grep -rn '"/src/' dist/index.html; then
+            echo "::error::dist/index.html references a /src/ dev path"
+            exit 1
+          fi
+          echo "OK — no /src/main.tsx references in the production build."
+
+      - name: Disable Jekyll processing
+        run: touch dist/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
