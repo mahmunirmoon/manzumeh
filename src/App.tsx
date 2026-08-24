@@ -4,8 +4,15 @@ import { InfoPanel } from "./components/InfoPanel";
 import { ControlDock } from "./components/ControlDock";
 import { BodyNav } from "./components/BodyNav";
 import { getBody } from "./data/bodies";
-import { IconCursor, IconSparkle, IconSunMini } from "./components/Icons";
+import {
+  IconCheck,
+  IconCursor,
+  IconDownload,
+  IconSparkle,
+  IconSunMini,
+} from "./components/Icons";
 import { fmt1, toFa } from "./lib/format";
+import { downloadProjectZip, projectFileCount } from "./lib/projectFiles";
 
 export default function App() {
   const [playing, setPlaying] = useState(true);
@@ -17,6 +24,19 @@ export default function App() {
   const [resetToken, setResetToken] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [hintSeen, setHintSeen] = useState(false);
+  const [zipState, setZipState] = useState<"idle" | "busy" | "done">("idle");
+
+  const handleDownloadZip = useCallback(async () => {
+    if (zipState === "busy") return;
+    setZipState("busy");
+    try {
+      await downloadProjectZip();
+      setZipState("done");
+      setTimeout(() => setZipState("idle"), 2400);
+    } catch {
+      setZipState("idle");
+    }
+  }, [zipState]);
 
   const selectedBody = useMemo(() => getBody(selectedId), [selectedId]);
 
@@ -93,6 +113,26 @@ export default function App() {
             <span className={`w-2 h-2 rounded-full ${playing ? "bg-solar-400 pulse-dot" : "bg-ink-faint"}`} />
             {playing ? "در حال گردش" : "متوقف"}
           </span>
+          <button
+            onClick={handleDownloadZip}
+            disabled={zipState === "busy"}
+            title={`دانلود ${toFa(projectFileCount())} فایل پروژه به‌صورت ZIP`}
+            className={`inline-flex items-center gap-1.5 text-[12px] font-bold rounded-full px-3.5 py-1.5 border transition-all duration-200
+              ${
+                zipState === "done"
+                  ? "border-comet/70 text-comet bg-comet/10"
+                  : "border-neon-400/60 text-neon-300 bg-neon-500/10 hover:bg-neon-500/25 hover:border-neon-400 hover:-translate-y-px active:translate-y-0 disabled:opacity-60"
+              }`}
+          >
+            {zipState === "done" ? (
+              <IconCheck className="w-4 h-4" />
+            ) : (
+              <IconDownload className={`w-4 h-4 ${zipState === "busy" ? "animate-bounce" : ""}`} />
+            )}
+            <span className="hidden md:inline">
+              {zipState === "done" ? "دانلود شد" : zipState === "busy" ? "در حال آماده‌سازی…" : "فایل‌های پروژه"}
+            </span>
+          </button>
           <span className="neon-breathe inline-flex items-center gap-1.5 text-[12px] font-bold rounded-full px-3.5 py-1.5 border border-neon-400/70 text-neon-300 bg-neon-500/15">
             <IconSparkle className="w-4 h-4" />
             طراحی شده توسط ماه منیر.
