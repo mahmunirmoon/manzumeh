@@ -140,6 +140,24 @@ export function IconCursor({ className, strokeWidth = 1.8 }: IconProps) {
   );
 }
 
+export function IconDownload({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg {...base(className)} strokeWidth={strokeWidth}>
+      <path d="M12 4v10.5" />
+      <path d="m7.5 10.5 4.5 4.5 4.5-4.5" />
+      <path d="M4.5 19.5h15" />
+    </svg>
+  );
+}
+
+export function IconCheck({ className, strokeWidth = 2.2 }: IconProps) {
+  return (
+    <svg {...base(className)} strokeWidth={strokeWidth}>
+      <path d="m5 12.5 4.5 4.5L19 7" />
+    </svg>
+  );
+}
+
 export function IconSunMini({ className }: IconProps) {
   return (
     <svg {...base(className)} strokeWidth={1.8}>
