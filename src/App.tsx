@@ -4,7 +4,7 @@ import { InfoPanel } from "./components/InfoPanel";
 import { ControlDock } from "./components/ControlDock";
 import { BodyNav } from "./components/BodyNav";
 import { getBody } from "./data/bodies";
-import { IconCursor, IconSunMini } from "./components/Icons";
+import { IconCursor, IconSparkle, IconSunMini } from "./components/Icons";
 import { fmt1, toFa } from "./lib/format";
 
 export default function App() {
@@ -92,6 +92,10 @@ export default function App() {
           >
             <span className={`w-2 h-2 rounded-full ${playing ? "bg-solar-400 pulse-dot" : "bg-ink-faint"}`} />
             {playing ? "در حال گردش" : "متوقف"}
+          </span>
+          <span className="neon-breathe inline-flex items-center gap-1.5 text-[12px] font-bold rounded-full px-3.5 py-1.5 border border-neon-400/70 text-neon-300 bg-neon-500/15">
+            <IconSparkle className="w-4 h-4" />
+            طراحی شده توسط ماه منیر.
           </span>
         </div>
       </header>

@@ -34,7 +34,7 @@ interface Sim {
   w: number; h: number;
 }
 
-const STAR_COLORS = ["#dfe8ff", "#dfe8ff", "#dfe8ff", "#ffe9c4", "#bfeef0"];
+const STAR_COLORS = ["#e9dcff", "#e9dcff", "#f3edff", "#ffe9c4", "#c9b2ff", "#dfe8ff"];
 const MAX_ORBIT = 372;
 
 function clamp(v: number, a: number, b: number) {
@@ -185,9 +185,9 @@ function SolarCanvasInner(props: SolarCanvasProps) {
       const rx = x - w / 2;
       const ry = y;
       roundRectPath(ctx, rx, ry, w, h, 10);
-      ctx.fillStyle = strong ? "rgba(8,15,36,0.88)" : "rgba(8,15,36,0.66)";
+      ctx.fillStyle = strong ? "rgba(22,8,48,0.9)" : "rgba(22,8,48,0.68)";
       ctx.fill();
-      ctx.strokeStyle = strong ? color : "rgba(120,140,190,0.3)";
+      ctx.strokeStyle = strong ? color : "rgba(168,140,255,0.32)";
       ctx.lineWidth = 1;
       ctx.stroke();
       ctx.fillStyle = strong ? "#f4f7ff" : "#c3d0ee";
@@ -248,7 +248,7 @@ function SolarCanvasInner(props: SolarCanvasProps) {
           const sel = p.selectedId === b.id;
           ctx.beginPath();
           ctx.arc(cx, cy, b.orbitR * s, 0, Math.PI * 2);
-          ctx.strokeStyle = sel ? b.color : "rgba(148,170,220,0.16)";
+          ctx.strokeStyle = sel ? b.color : "rgba(178,150,255,0.2)";
           ctx.globalAlpha = sel ? 0.6 : 1;
           ctx.lineWidth = sel ? 1.5 : 1;
           ctx.stroke();
