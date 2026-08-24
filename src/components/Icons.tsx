@@ -166,3 +166,24 @@ export function IconSunMini({ className }: IconProps) {
     </svg>
   );
 }
+
+export function IconServer({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg {...base(className)} strokeWidth={strokeWidth}>
+      <rect x="4" y="4" width="16" height="7" rx="2" />
+      <rect x="4" y="13" width="16" height="7" rx="2" />
+      <circle cx="8" cy="7.5" r="0.9" fill="currentColor" stroke="none" />
+      <circle cx="8" cy="16.5" r="0.9" fill="currentColor" stroke="none" />
+      <path d="M12 7.5h4M12 16.5h4" />
+    </svg>
+  );
+}
+
+export function IconCode({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg {...base(className)} strokeWidth={strokeWidth}>
+      <path d="m8 7-5 5 5 5M16 7l5 5-5 5" />
+      <path d="m13.2 4.5-2.4 15" />
+    </svg>
+  );
+}
