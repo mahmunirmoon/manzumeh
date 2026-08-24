@@ -6,13 +6,14 @@ import { BodyNav } from "./components/BodyNav";
 import { getBody } from "./data/bodies";
 import {
   IconCheck,
+  IconCode,
   IconCursor,
-  IconDownload,
+  IconServer,
   IconSparkle,
   IconSunMini,
 } from "./components/Icons";
 import { fmt1, toFa } from "./lib/format";
-import { downloadProjectZip, projectFileCount } from "./lib/projectFiles";
+import { downloadHostReadyZip, downloadProjectZip, projectFileCount } from "./lib/projectFiles";
 
 export default function App() {
   const [playing, setPlaying] = useState(true);
@@ -25,6 +26,19 @@ export default function App() {
   const [elapsed, setElapsed] = useState(0);
   const [hintSeen, setHintSeen] = useState(false);
   const [zipState, setZipState] = useState<"idle" | "busy" | "done">("idle");
+  const [hostState, setHostState] = useState<"idle" | "busy" | "done">("idle");
+
+  const handleDownloadHost = useCallback(async () => {
+    if (hostState === "busy") return;
+    setHostState("busy");
+    try {
+      await downloadHostReadyZip();
+      setHostState("done");
+      setTimeout(() => setHostState("idle"), 2400);
+    } catch {
+      setHostState("idle");
+    }
+  }, [hostState]);
 
   const handleDownloadZip = useCallback(async () => {
     if (zipState === "busy") return;
@@ -114,9 +128,29 @@ export default function App() {
             {playing ? "در حال گردش" : "متوقف"}
           </span>
           <button
+            onClick={handleDownloadHost}
+            disabled={hostState === "busy"}
+            title="دانلود نسخهٔ نهاییِ آمادهٔ آپلود روی هاست و دامنه (بدون نیاز به npm)"
+            className={`inline-flex items-center gap-1.5 text-[12px] font-bold rounded-full px-3.5 py-1.5 border transition-all duration-200
+              ${
+                hostState === "done"
+                  ? "border-comet/70 text-comet bg-comet/10"
+                  : "border-solar-400/70 text-solar-300 bg-solar-400/10 hover:bg-solar-400/25 hover:border-solar-400 hover:-translate-y-px active:translate-y-0 disabled:opacity-60 shadow-[0_0_16px_rgba(255,170,50,0.18)]"
+              }`}
+          >
+            {hostState === "done" ? (
+              <IconCheck className="w-4 h-4" />
+            ) : (
+              <IconServer className={`w-4 h-4 ${hostState === "busy" ? "animate-pulse" : ""}`} />
+            )}
+            <span className="hidden md:inline">
+              {hostState === "done" ? "دانلود شد" : hostState === "busy" ? "در حال بسته‌بندی…" : "نسخهٔ هاست"}
+            </span>
+          </button>
+          <button
             onClick={handleDownloadZip}
             disabled={zipState === "busy"}
-            title={`دانلود ${toFa(projectFileCount())} فایل پروژه به‌صورت ZIP`}
+            title={`دانلود ${toFa(projectFileCount())} فایلِ منبع پروژه برای GitHub یا توسعهٔ محلی`}
             className={`inline-flex items-center gap-1.5 text-[12px] font-bold rounded-full px-3.5 py-1.5 border transition-all duration-200
               ${
                 zipState === "done"
@@ -127,10 +161,10 @@ export default function App() {
             {zipState === "done" ? (
               <IconCheck className="w-4 h-4" />
             ) : (
-              <IconDownload className={`w-4 h-4 ${zipState === "busy" ? "animate-bounce" : ""}`} />
+              <IconCode className={`w-4 h-4 ${zipState === "busy" ? "animate-pulse" : ""}`} />
             )}
             <span className="hidden md:inline">
-              {zipState === "done" ? "دانلود شد" : zipState === "busy" ? "در حال آماده‌سازی…" : "فایل‌های پروژه"}
+              {zipState === "done" ? "دانلود شد" : zipState === "busy" ? "در حال آماده‌سازی…" : "سورس پروژه"}
             </span>
           </button>
           <span className="neon-breathe inline-flex items-center gap-1.5 text-[12px] font-bold rounded-full px-3.5 py-1.5 border border-neon-400/70 text-neon-300 bg-neon-500/15">
