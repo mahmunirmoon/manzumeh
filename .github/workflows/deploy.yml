@@ -43,18 +43,25 @@ jobs:
       - name: Build (relative base for the /manzumeh/ sub-path)
         run: npm run build -- --base=./
 
-      - name: Verify production build has no /src/main.tsx references
+      - name: Verify production build has no dev-source references
         run: |
           echo "Scanning dist/ for dev-source references..."
-          if grep -rn "src/main.tsx" dist/; then
-            echo "::error::Production build still references /src/main.tsx"
+          # Escaped dot: matches the literal dev path anywhere in dist/
+          # (including inside bundles) without self-matching this file's
+          # own inlined copy in the ZIP-packaging module.
+          if grep -rn "src/main\.tsx" dist/; then
+            echo "::error::Production build still references the dev entry module"
             exit 1
           fi
-          if grep -rn '"/src/' dist/index.html; then
+          if grep -rn 'src="/src/' dist/index.html; then
             echo "::error::dist/index.html references a /src/ dev path"
             exit 1
           fi
-          echo "OK — no /src/main.tsx references in the production build."
+          if ! grep -q 'assets/index-.*\.js' dist/index.html; then
+            echo "::error::dist/index.html does not reference hashed bundles — build output looks wrong"
+            exit 1
+          fi
+          echo "OK — production build contains no dev-source references."
 
       - name: Disable Jekyll processing
         run: touch dist/.nojekyll
