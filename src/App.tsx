@@ -128,22 +128,22 @@ export default function App() {
             <IconSunMini className="w-9 h-9 spin-slow" />
           </span>
           <div>
-            <h1 className="font-display text-2xl md:text-3xl leading-none text-ink">
-              منظومهٔ شمسی
+            <h1 className="font-display text-[38px] md:text-[48px] leading-[1.05] glow-soft">
+              منظومهٔ <span className="glow-amber">شمسی</span>
             </h1>
-            <p className="text-[11px] text-ink-dim mt-1">
-              آزمایشگاه تعاملی مدارها · خورشید و هشت سیاره
+            <p className="text-sm md:text-[15.5px] font-bold text-ink/95 mt-0.5">
+              آزمایشگاه تعاملی مدارها · <span className="glow-violet">روی هر سیاره کلیک کنید</span>
             </p>
           </div>
         </div>
         <div className="rise-in flex items-center gap-2" style={{ animationDelay: "0.1s" }}>
-          <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-ink-dim border border-space-600/60 rounded-full px-3 py-1.5 bg-space-900/60">
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-[12.5px] font-bold text-ink-dim border border-space-600/60 rounded-full px-3.5 py-2 bg-space-900/60">
             سرعت:
-            <b className="text-solar-300">{speed < 10 ? fmt1(speed) : toFa(Math.round(speed))}</b>
+            <b className="text-solar-300 text-[13.5px]">{speed < 10 ? fmt1(speed) : toFa(Math.round(speed))}</b>
             روز/ثانیه
           </span>
           <span
-            className={`inline-flex items-center gap-1.5 text-[11px] font-medium rounded-full px-3 py-1.5 border
+            className={`inline-flex items-center gap-1.5 text-[12.5px] font-bold rounded-full px-3.5 py-2 border
               ${playing
                 ? "text-solar-300 border-solar-400/50 bg-solar-400/10"
                 : "text-ink-dim border-space-600/60 bg-space-900/60"}`}
@@ -219,12 +219,12 @@ export default function App() {
         {!hintSeen && !selectedId && (
           <button
             onClick={() => setHintSeen(true)}
-            className="float-hint absolute z-20 top-5 left-1/2 flex items-center gap-2 text-[12px] text-ink-dim
-              border border-space-600/70 bg-space-900/75 backdrop-blur-sm rounded-full px-4 py-2
-              hover:text-ink hover:border-solar-400/50 transition-colors"
+            className="float-hint absolute z-20 top-5 left-1/2 flex items-center gap-2 text-sm font-bold text-ink
+              border border-neon-400/60 bg-space-900/85 backdrop-blur-sm rounded-full px-5 py-2.5 shadow-[0_8px_30px_rgba(154,69,245,0.35)]
+              hover:border-solar-400/70 transition-colors"
           >
-            <IconCursor className="w-4 h-4 text-solar-400" />
-            روی خورشید یا هر سیاره کلیک کنید تا مشخصاتش را ببینید
+            <IconCursor className="w-5 h-5 text-solar-400" />
+            روی خورشید یا هر <span className="glow-amber">سیاره</span> کلیک کنید تا مشخصات و ملودی‌اش را ببینید
           </button>
         )}
 
@@ -232,7 +232,7 @@ export default function App() {
         <button
           onClick={toggleMusic}
           title={musicOn ? "قطع موسیقی" : "پخش موسیقی سیاره‌ها"}
-          className={`absolute z-20 bottom-3 right-3 md:bottom-4 md:right-4 flex items-center gap-2.5 rounded-full border px-3.5 py-2 text-[12px] font-bold transition-all duration-200 hover:-translate-y-px
+          className={`absolute z-20 bottom-3 right-3 md:bottom-4 md:right-4 flex items-center gap-2.5 rounded-full border px-4 py-2.5 text-[13px] font-bold transition-all duration-200 hover:-translate-y-px
             ${
               musicOn
                 ? "chip-glow border-neon-400/70 text-neon-300 bg-space-900/85 backdrop-blur-sm"
@@ -245,16 +245,16 @@ export default function App() {
                 <span /><span /><span /><span />
               </span>
               <span className="flex flex-col items-start leading-tight">
-                <span className="text-[10px] font-medium text-ink-dim">در حال پخش</span>
-                <span className="text-[12.5px]">{musicTitle}</span>
+                <span className="text-[11px] font-semibold text-ink-dim">در حال پخش</span>
+                <span className="text-[13.5px] font-extrabold text-ink">{musicTitle}</span>
               </span>
             </>
           ) : (
             <>
-              <IconMute className="w-4.5 h-4.5" />
+              <IconMute className="w-5 h-5" />
               <span className="flex flex-col items-start leading-tight">
-                <span className="text-[12.5px]">موسیقی سیاره‌ها</span>
-                <span className="text-[10px] font-medium text-ink-faint">برای پخش کلیک کنید</span>
+                <span className="text-[13.5px] font-extrabold text-ink">موسیقی سیاره‌ها</span>
+                <span className="text-[11px] font-semibold text-ink-faint">برای پخش کلیک کنید</span>
               </span>
             </>
           )}

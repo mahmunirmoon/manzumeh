@@ -27,6 +27,8 @@ interface Asteroid {
 interface Rocket { x: number; y: number; vx: number; vy: number; ang: number; }
 interface BigComet { x: number; y: number; vx: number; vy: number; life: number; max: number; }
 interface Sparkle { x: number; y: number; life: number; max: number; r: number; c: string; }
+interface Ufo { x: number; y: number; vx: number; baseY: number; scale: number; variant: number; }
+interface Satellite { x: number; y: number; vx: number; vy: number; rot: number; vr: number; }
 
 interface Sim {
   elapsed: number;
@@ -39,7 +41,7 @@ interface Sim {
   hoverId: string | null;
   hits: Hit[];
   w: number; h: number;
-  alien: { x: number; y: number; vx: number; baseY: number };
+  ufos: Ufo[];
   asteroids: Asteroid[];
   rockets: Rocket[];
   nextRocket: number;
@@ -47,23 +49,46 @@ interface Sim {
   nextComet: number;
   sparkles: Sparkle[];
   nextSparkle: number;
+  satellites: Satellite[];
 }
 
 function makeAsteroids(w: number, h: number): Asteroid[] {
-  return Array.from({ length: 4 }, () => ({
+  return Array.from({ length: 7 }, () => ({
     x: Math.random() * w,
     y: Math.random() * h,
-    vx: (Math.random() - 0.5) * 22,
-    vy: (Math.random() - 0.5) * 14,
-    r: 6 + Math.random() * 9,
+    vx: (Math.random() - 0.5) * 30,
+    vy: (Math.random() - 0.5) * 20,
+    r: 6 + Math.random() * 10,
     rot: Math.random() * Math.PI * 2,
-    vr: (Math.random() - 0.5) * 1.6,
+    vr: (Math.random() - 0.5) * 2.4,
     verts: Array.from({ length: 8 }, () => 0.68 + Math.random() * 0.5),
     craters: Array.from({ length: 3 }, () => ({
       dx: (Math.random() - 0.5) * 0.9,
       dy: (Math.random() - 0.5) * 0.9,
       r: 0.14 + Math.random() * 0.16,
     })),
+  }));
+}
+
+function makeUfos(w: number, h: number): Ufo[] {
+  return Array.from({ length: 3 }, (_, i) => ({
+    x: Math.random() * w,
+    y: 60 + Math.random() * Math.max(80, h * 0.3),
+    vx: (18 + Math.random() * 30) * (Math.random() > 0.4 ? 1 : -1),
+    baseY: 60 + Math.random() * Math.max(80, h * 0.3),
+    scale: 0.6 + i * 0.28 + Math.random() * 0.12,
+    variant: i % 3,
+  }));
+}
+
+function makeSatellites(w: number, h: number): Satellite[] {
+  return Array.from({ length: 2 }, () => ({
+    x: Math.random() * w,
+    y: Math.random() * h,
+    vx: (Math.random() - 0.5) * 16,
+    vy: (Math.random() - 0.5) * 10,
+    rot: Math.random() * Math.PI * 2,
+    vr: 0.5 + Math.random() * 0.8,
   }));
 }
 
@@ -96,13 +121,14 @@ function SolarCanvasInner(props: SolarCanvasProps) {
   const simRef = useRef<Sim>({
     elapsed: 0, last: 0, lastSent: 0,
     cx: 0, cy: 0, scale: 0.8,
-    stars: [], meteors: [], nextMeteor: 6,
+    stars: [], meteors: [], nextMeteor: 3,
     hoverId: null, hits: [], w: 0, h: 0,
-    alien: { x: -150, y: 110, vx: 38, baseY: 110 },
+    ufos: [],
     asteroids: [],
-    rockets: [], nextRocket: 7,
-    comets: [], nextComet: 4,
-    sparkles: [], nextSparkle: 1.5,
+    rockets: [], nextRocket: 4,
+    comets: [], nextComet: 3,
+    sparkles: [], nextSparkle: 1,
+    satellites: [],
   });
 
   /* reset simulation clock */
@@ -125,9 +151,9 @@ function SolarCanvasInner(props: SolarCanvasProps) {
         x: Math.random() * sim.w,
         y: Math.random() * sim.h,
         r: 0.4 + Math.random() * 1.1,
-        baseA: 0.22 + Math.random() * 0.55,
-        twA: 0.08 + Math.random() * 0.38,
-        twS: 0.5 + Math.random() * 2,
+        baseA: 0.26 + Math.random() * 0.58,
+        twA: 0.1 + Math.random() * 0.42,
+        twS: 0.8 + Math.random() * 3,
         ph: Math.random() * Math.PI * 2,
         c: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
       }));
@@ -143,11 +169,11 @@ function SolarCanvasInner(props: SolarCanvasProps) {
       if (sim.cx === 0) {
         sim.cx = rect.width / 2;
         sim.cy = rect.height / 2;
-        sim.alien.baseY = 60 + Math.random() * Math.max(60, rect.height * 0.28);
-        sim.alien.y = sim.alien.baseY;
       }
-      if (sim.asteroids.length === 0 && rect.width > 0) {
-        sim.asteroids = makeAsteroids(rect.width, rect.height);
+      if (rect.width > 0) {
+        if (sim.asteroids.length === 0) sim.asteroids = makeAsteroids(rect.width, rect.height);
+        if (sim.ufos.length === 0) sim.ufos = makeUfos(rect.width, rect.height);
+        if (sim.satellites.length === 0) sim.satellites = makeSatellites(rect.width, rect.height);
       }
       makeStars();
     };
@@ -222,18 +248,18 @@ function SolarCanvasInner(props: SolarCanvasProps) {
     };
 
     const drawLabel = (text: string, x: number, y: number, color: string, strong: boolean) => {
-      ctx.font = `${strong ? 600 : 500} 11px Vazirmatn, sans-serif`;
-      const w = ctx.measureText(text).width + 16;
-      const h = 20;
+      ctx.font = `${strong ? 800 : 700} 13px Vazirmatn, sans-serif`;
+      const w = ctx.measureText(text).width + 20;
+      const h = 24;
       const rx = x - w / 2;
       const ry = y;
-      roundRectPath(ctx, rx, ry, w, h, 10);
-      ctx.fillStyle = strong ? "rgba(22,8,48,0.9)" : "rgba(22,8,48,0.68)";
+      roundRectPath(ctx, rx, ry, w, h, 12);
+      ctx.fillStyle = strong ? "rgba(22,8,48,0.94)" : "rgba(22,8,48,0.74)";
       ctx.fill();
-      ctx.strokeStyle = strong ? color : "rgba(168,140,255,0.32)";
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = strong ? color : "rgba(168,140,255,0.4)";
+      ctx.lineWidth = strong ? 1.6 : 1;
       ctx.stroke();
-      ctx.fillStyle = strong ? "#f4f7ff" : "#c3d0ee";
+      ctx.fillStyle = strong ? color : "#e2e9ff";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(text, x, ry + h / 2 + 0.5);
@@ -292,10 +318,17 @@ function SolarCanvasInner(props: SolarCanvasProps) {
     };
 
     /* ---- friendly alien in a UFO ---- */
-    const drawAlien = (x: number, y: number, t: number) => {
+    const ALIEN_SKINS = [
+      { skin: "#7ee08a", line: "#5cbf6b", mouth: "#2e7d43", lights: ["#ff5d8f", "#7ee8fa", "#ffd166"] },
+      { skin: "#8fe3e0", line: "#5cbfb8", mouth: "#2e7d78", lights: ["#b56bff", "#7ee8fa", "#ff8fb3"] },
+      { skin: "#e8a0d8", line: "#c97fb8", mouth: "#8f4a7d", lights: ["#ffd166", "#7ef2c4", "#ff5d8f"] },
+    ];
+    const drawAlien = (x: number, y: number, t: number, scale = 1, variant = 0) => {
+      const skin = ALIEN_SKINS[variant % ALIEN_SKINS.length];
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(Math.sin(t * 1.7) * 0.07);
+      ctx.scale(scale, scale);
 
       /* abduction beam, every now and then */
       const beamPhase = t % 11;
@@ -335,7 +368,7 @@ function SolarCanvasInner(props: SolarCanvasProps) {
       ctx.stroke();
 
       /* blinking rim lights */
-      const lightColors = ["#ff5d8f", "#7ee8fa", "#ffd166"];
+      const lightColors = skin.lights;
       for (let i = 0; i < 5; i++) {
         const lx = -24 + i * 12;
         const on = Math.sin(t * 6 + i * 1.7) > -0.2;
@@ -363,11 +396,11 @@ function SolarCanvasInner(props: SolarCanvasProps) {
       ctx.stroke();
 
       /* alien head */
-      ctx.fillStyle = "#7ee08a";
+      ctx.fillStyle = skin.skin;
       ctx.beginPath();
       ctx.ellipse(0, -5, 7.5, 8.5, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = "#5cbf6b";
+      ctx.strokeStyle = skin.line;
       ctx.lineWidth = 1.3;
       ctx.beginPath();
       ctx.moveTo(-3, -12); ctx.quadraticCurveTo(-6, -18, -7, -20);
@@ -395,6 +428,52 @@ function SolarCanvasInner(props: SolarCanvasProps) {
       ctx.restore();
     };
 
+    /* ---- tiny drifting satellite ---- */
+    const drawSatellite = (x: number, y: number, rot: number, t: number) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rot * 0.4);
+      ctx.globalAlpha = 0.9;
+      /* solar panels */
+      ctx.fillStyle = "#4a5fd0";
+      ctx.strokeStyle = "#9db1ff";
+      ctx.lineWidth = 0.8;
+      ctx.fillRect(-20, -4, 12, 8);
+      ctx.strokeRect(-20, -4, 12, 8);
+      ctx.fillRect(8, -4, 12, 8);
+      ctx.strokeRect(8, -4, 12, 8);
+      ctx.strokeStyle = "rgba(157,177,255,0.7)";
+      ctx.beginPath();
+      ctx.moveTo(-14, -4); ctx.lineTo(-14, 4);
+      ctx.moveTo(14, -4); ctx.lineTo(14, 4);
+      ctx.stroke();
+      /* body */
+      const bg = ctx.createLinearGradient(0, -6, 0, 6);
+      bg.addColorStop(0, "#d8d2ea");
+      bg.addColorStop(1, "#8a82a8");
+      ctx.fillStyle = bg;
+      roundRectPath(ctx, -6, -6, 12, 12, 2.5);
+      ctx.fill();
+      /* dish */
+      ctx.rotate(rot);
+      ctx.fillStyle = "#c9c0e2";
+      ctx.beginPath();
+      ctx.arc(0, -8, 4.5, Math.PI * 1.05, Math.PI * 1.95);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#7ee8fa";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, -8); ctx.lineTo(0, -12);
+      ctx.stroke();
+      const blink = Math.sin(t * 5) > 0.3;
+      ctx.fillStyle = blink ? "#ff5d8f" : "rgba(255,93,143,0.25)";
+      ctx.beginPath();
+      ctx.arc(0, -12.6, 1.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    };
+
     const draw = (t: number) => {
       const p = propsRef.current;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -413,14 +492,17 @@ function SolarCanvasInner(props: SolarCanvasProps) {
 
       /* meteors */
       if (t > sim.nextMeteor) {
-        sim.nextMeteor = t + 6 + Math.random() * 9;
-        sim.meteors.push({
-          x: sim.w * (0.15 + Math.random() * 0.75),
-          y: sim.h * Math.random() * 0.3,
-          vx: -(280 + Math.random() * 260),
-          vy: 130 + Math.random() * 150,
-          life: 0, max: 0.85 + Math.random() * 0.5,
-        });
+        sim.nextMeteor = t + 2.2 + Math.random() * 3.8;
+        const n = Math.random() < 0.35 ? 2 : 1;
+        for (let i = 0; i < n; i++) {
+          sim.meteors.push({
+            x: sim.w * (0.15 + Math.random() * 0.75),
+            y: sim.h * Math.random() * 0.3,
+            vx: -(280 + Math.random() * 280),
+            vy: 130 + Math.random() * 160,
+            life: 0, max: 0.85 + Math.random() * 0.5,
+          });
+        }
       }
       sim.meteors = sim.meteors.filter((m) => m.life < m.max);
       for (const m of sim.meteors) {
@@ -701,8 +783,15 @@ function SolarCanvasInner(props: SolarCanvasProps) {
         drawRocket(r.x, r.y, r.ang, t + i * 3);
       }
 
-      /* the friendly alien, always patrolling */
-      drawAlien(sim.alien.x, sim.alien.y, t);
+      /* drifting satellites */
+      for (const sat of sim.satellites) {
+        drawSatellite(sat.x, sat.y, sat.rot, t);
+      }
+
+      /* the friendly alien fleet, always patrolling */
+      for (const al of sim.ufos) {
+        drawAlien(al.x, al.y, t + al.variant * 4, al.scale, al.variant);
+      }
     };
 
     /* ---------- animation loop ---------- */
@@ -722,14 +811,19 @@ function SolarCanvasInner(props: SolarCanvasProps) {
       }
 
       /* ---- playful entities ---- */
-      const al = sim.alien;
-      al.x += al.vx * dt;
-      if (al.x > sim.w + 160) {
-        al.x = -160;
-        al.baseY = 50 + Math.random() * Math.max(70, sim.h * 0.3);
-        al.vx = 26 + Math.random() * 34;
+      for (const al of sim.ufos) {
+        al.x += al.vx * dt;
+        if (al.x > sim.w + 180) {
+          al.x = -180;
+          al.baseY = 50 + Math.random() * Math.max(70, sim.h * 0.32);
+          al.vx = 18 + Math.random() * 40;
+        } else if (al.x < -180) {
+          al.x = sim.w + 180;
+          al.baseY = 50 + Math.random() * Math.max(70, sim.h * 0.32);
+          al.vx = -(18 + Math.random() * 40);
+        }
+        al.y = al.baseY + Math.sin(t * 1.15 + al.variant * 2.1) * 24;
       }
-      al.y = al.baseY + Math.sin(t * 1.1) * 22;
 
       for (const ast of sim.asteroids) {
         ast.x += ast.vx * dt;
@@ -741,15 +835,25 @@ function SolarCanvasInner(props: SolarCanvasProps) {
         if (ast.y > sim.h + 60) ast.y = -55;
       }
 
-      if (t > sim.nextRocket) {
-        sim.nextRocket = t + 14 + Math.random() * 12;
+      for (const sat of sim.satellites) {
+        sat.x += sat.vx * dt;
+        sat.y += sat.vy * dt;
+        sat.rot += sat.vr * dt;
+        if (sat.x < -50) sat.x = sim.w + 45;
+        if (sat.x > sim.w + 50) sat.x = -45;
+        if (sat.y < -50) sat.y = sim.h + 45;
+        if (sat.y > sim.h + 50) sat.y = -45;
+      }
+
+      if (t > sim.nextRocket && sim.rockets.length < 3) {
+        sim.nextRocket = t + 5 + Math.random() * 6;
         const fromLeft = Math.random() > 0.5;
-        const sp = 130 + Math.random() * 80;
-        const vy = (Math.random() - 0.6) * 60;
+        const sp = 140 + Math.random() * 100;
+        const vy = (Math.random() - 0.6) * 70;
         const vx = fromLeft ? sp : -sp;
         sim.rockets.push({
           x: fromLeft ? -40 : sim.w + 40,
-          y: sim.h * (0.12 + Math.random() * 0.5),
+          y: sim.h * (0.1 + Math.random() * 0.55),
           vx, vy,
           ang: Math.atan2(vy, vx),
         });
@@ -761,14 +865,14 @@ function SolarCanvasInner(props: SolarCanvasProps) {
       sim.rockets = sim.rockets.filter((r) => r.x > -90 && r.x < sim.w + 90);
 
       if (t > sim.nextComet) {
-        sim.nextComet = t + 9 + Math.random() * 8;
+        sim.nextComet = t + 4.5 + Math.random() * 5;
         sim.comets.push({
           x: sim.w * (0.2 + Math.random() * 0.7),
           y: -20,
-          vx: -(120 + Math.random() * 120),
-          vy: 90 + Math.random() * 90,
+          vx: -(120 + Math.random() * 130),
+          vy: 95 + Math.random() * 100,
           life: 0,
-          max: 2.2 + Math.random() * 1.2,
+          max: 2.2 + Math.random() * 1.4,
         });
       }
       for (const c of sim.comets) {
@@ -779,11 +883,11 @@ function SolarCanvasInner(props: SolarCanvasProps) {
       sim.comets = sim.comets.filter((c) => c.life < c.max && c.y < sim.h + 40);
 
       if (t > sim.nextSparkle && sim.stars.length > 0) {
-        sim.nextSparkle = t + 1.6 + Math.random() * 2;
+        sim.nextSparkle = t + 0.6 + Math.random() * 1.1;
         const st = sim.stars[Math.floor(Math.random() * sim.stars.length)];
         sim.sparkles.push({
           x: st.x, y: st.y, life: 0, max: 0.9,
-          r: 4 + Math.random() * 5,
+          r: 4 + Math.random() * 6,
           c: Math.random() > 0.5 ? "#e9dcff" : "#ffe9c4",
         });
       }

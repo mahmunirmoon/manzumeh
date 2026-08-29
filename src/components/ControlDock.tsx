@@ -49,7 +49,7 @@ function Toggle({
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12px] font-medium transition-all duration-200
+      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-[13px] font-bold transition-all duration-200
         ${
           active
             ? "border-solar-400/70 text-solar-300 bg-solar-400/10 shadow-[0_0_14px_rgba(255,194,75,0.15)]"
@@ -93,12 +93,12 @@ export function ControlDock(p: Props) {
       </div>
 
       {/* elapsed */}
-      <div className="text-center min-w-[128px]">
-        <div className="font-display text-2xl leading-none text-solar-300 tabular-nums">
+      <div className="text-center min-w-[140px]">
+        <div className="font-display text-[32px] leading-none text-solar-300 tabular-nums drop-shadow-[0_0_12px_rgba(255,170,60,0.45)]">
           {fmtInt(p.elapsed)}
-          <span className="text-sm text-ink-dim font-body mr-1.5">روز گذشته</span>
+          <span className="text-sm font-bold text-ink font-body mr-2">روز گذشته</span>
         </div>
-        <div className="text-[10.5px] text-ink-faint mt-1">
+        <div className="text-xs font-bold text-neon-300 mt-1">
           ≈ {fmt1(p.elapsed / 365.25)} سال زمینی
         </div>
       </div>
@@ -107,9 +107,9 @@ export function ControlDock(p: Props) {
 
       {/* speed */}
       <div className="flex flex-col gap-1.5 w-56">
-        <div className="flex items-center justify-between text-[11px]">
-          <span className="text-ink-dim">سرعت شبیه‌سازی</span>
-          <span className="text-solar-300 font-semibold">
+        <div className="flex items-center justify-between text-[13px] font-bold">
+          <span className="text-ink">سرعت شبیه‌سازی</span>
+          <span className="text-solar-300 font-extrabold text-[14px]">
             {p.speed < 10 ? fmt1(p.speed) : fmtInt(p.speed)} روز / ثانیه
           </span>
         </div>
@@ -130,7 +130,7 @@ export function ControlDock(p: Props) {
               <button
                 key={v}
                 onClick={() => p.onSpeedChange(v)}
-                className={`px-1.5 py-0.5 rounded text-[10px] border transition-colors ${
+                className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${
                   Math.abs(p.speed - v) < 0.01
                     ? "border-solar-400/70 text-solar-300 bg-solar-400/10"
                     : "border-space-600/60 text-ink-faint hover:text-ink"
@@ -140,7 +140,7 @@ export function ControlDock(p: Props) {
               </button>
             ))}
           </div>
-          <span className="text-[10px] text-ink-faint">≈ {fmt1(yearsPerMinute)} سال در دقیقه</span>
+          <span className="text-[11px] font-bold text-neon-300">≈ {fmt1(yearsPerMinute)} سال در دقیقه</span>
         </div>
       </div>
 

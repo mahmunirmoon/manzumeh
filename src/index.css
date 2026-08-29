@@ -32,6 +32,21 @@ body {
   background: var(--color-space-950);
   color: var(--color-ink);
   overflow: hidden;
+  font-weight: 500;
+  font-size: 15.5px;
+}
+
+/* ---------- glowing readable headings ---------- */
+.glow-amber {
+  color: #ffd88a;
+  text-shadow: 0 0 22px rgba(255, 178, 60, 0.55), 0 2px 0 rgba(20, 4, 40, 0.6);
+}
+.glow-violet {
+  color: #d9c2ff;
+  text-shadow: 0 0 20px rgba(181, 107, 255, 0.55), 0 2px 0 rgba(20, 4, 40, 0.6);
+}
+.glow-soft {
+  text-shadow: 0 2px 10px rgba(10, 2, 30, 0.85);
 }
 
 /* ---------- ambient deep-space background ---------- */
@@ -56,7 +71,7 @@ body {
   right: -12vw;
   top: -18vw;
   background: radial-gradient(circle, rgba(154, 69, 245, 0.42), transparent 65%);
-  animation: drift-a 46s ease-in-out infinite alternate;
+  animation: drift-a 22s ease-in-out infinite alternate;
 }
 .nebula-b {
   width: 42vw;
@@ -64,7 +79,7 @@ body {
   left: -14vw;
   bottom: -16vw;
   background: radial-gradient(circle, rgba(122, 38, 217, 0.36), transparent 65%);
-  animation: drift-b 58s ease-in-out infinite alternate;
+  animation: drift-b 28s ease-in-out infinite alternate;
 }
 .nebula-c {
   width: 30vw;
@@ -72,7 +87,7 @@ body {
   right: 22vw;
   bottom: -10vw;
   background: radial-gradient(circle, rgba(214, 90, 245, 0.22), transparent 65%);
-  animation: drift-a 70s ease-in-out infinite alternate-reverse;
+  animation: drift-a 34s ease-in-out infinite alternate-reverse;
 }
 @keyframes drift-a {
   from { transform: translate3d(0, 0, 0) scale(1); }

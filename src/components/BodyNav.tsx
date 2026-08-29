@@ -17,13 +17,13 @@ export function BodyNav({ selectedId, onSelect }: Props) {
           <button
             key={b.id}
             onClick={() => onSelect(b.id)}
-            className={`shrink-0 flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12.5px] font-medium transition-all duration-200
+            className={`shrink-0 flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-extrabold transition-all duration-200
               ${
                 active
-                  ? "text-ink border-transparent bg-space-700/90 shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
-                  : "text-ink-dim border-space-600/50 hover:text-ink hover:border-space-600 bg-space-900/50"
+                  ? "border-transparent bg-space-700/95 shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
+                  : "text-ink/80 border-space-600/60 hover:text-ink hover:border-neon-400/50 bg-space-900/60"
               }`}
-            style={active ? { boxShadow: `0 0 0 1.5px ${b.color}99, 0 4px 16px rgba(0,0,0,0.4)` } : undefined}
+            style={active ? { boxShadow: `0 0 0 1.5px ${b.color}aa, 0 4px 18px ${b.color}44`, color: b.color } : undefined}
           >
             <span
               className="w-2.5 h-2.5 rounded-full shrink-0"
