@@ -8,12 +8,15 @@ import {
   IconCheck,
   IconCode,
   IconCursor,
+  IconMusic,
+  IconMute,
   IconServer,
   IconSparkle,
   IconSunMini,
 } from "./components/Icons";
 import { fmt1, toFa } from "./lib/format";
 import { downloadHostReadyZip, downloadProjectZip, projectFileCount } from "./lib/projectFiles";
+import { disableMusic, enableMusic, setTrack, trackBpm, trackTitle } from "./lib/music";
 
 export default function App() {
   const [playing, setPlaying] = useState(true);
@@ -27,6 +30,27 @@ export default function App() {
   const [hintSeen, setHintSeen] = useState(false);
   const [zipState, setZipState] = useState<"idle" | "busy" | "done">("idle");
   const [hostState, setHostState] = useState<"idle" | "busy" | "done">("idle");
+  const [musicOn, setMusicOn] = useState(false);
+
+  const trackId = selectedId ?? "space";
+  const musicTitle = trackTitle(trackId);
+  const musicBpm = trackBpm(trackId);
+
+  const toggleMusic = useCallback(() => {
+    setMusicOn((on) => {
+      if (on) {
+        disableMusic();
+        return false;
+      }
+      enableMusic(selectedId);
+      return true;
+    });
+  }, [selectedId]);
+
+  /* switch the tune whenever another body is selected (or deselected) */
+  useEffect(() => {
+    if (musicOn) setTrack(trackId);
+  }, [musicOn, trackId]);
 
   const handleDownloadHost = useCallback(async () => {
     if (hostState === "busy") return;
@@ -167,9 +191,12 @@ export default function App() {
               {zipState === "done" ? "دانلود شد" : zipState === "busy" ? "در حال آماده‌سازی…" : "سورس پروژه"}
             </span>
           </button>
-          <span className="neon-breathe inline-flex items-center gap-1.5 text-[12px] font-bold rounded-full px-3.5 py-1.5 border border-neon-400/70 text-neon-300 bg-neon-500/15">
-            <IconSparkle className="w-4 h-4" />
-            طراحی شده توسط ماه منیر.
+          <span className="neon-breathe inline-flex items-center gap-2 rounded-full px-3.5 py-1 border border-neon-400/70 text-neon-300 bg-neon-500/15">
+            <IconSparkle className="w-4 h-4 shrink-0" />
+            <span className="flex flex-col items-start leading-tight text-start">
+              <span className="text-[12px] font-bold">طراحی توسط امیرعلی</span>
+              <span className="text-[10px] font-medium text-neon-300/80">از شاگردان خانم دکتر آقایی.</span>
+            </span>
           </span>
         </div>
       </header>
@@ -201,7 +228,45 @@ export default function App() {
           </button>
         )}
 
-        <InfoPanel key={selectedId ?? "none"} body={selectedBody} onClose={() => setSelectedId(null)} />
+        {/* music chip — each planet has its own tune */}
+        <button
+          onClick={toggleMusic}
+          title={musicOn ? "قطع موسیقی" : "پخش موسیقی سیاره‌ها"}
+          className={`absolute z-20 bottom-3 right-3 md:bottom-4 md:right-4 flex items-center gap-2.5 rounded-full border px-3.5 py-2 text-[12px] font-bold transition-all duration-200 hover:-translate-y-px
+            ${
+              musicOn
+                ? "chip-glow border-neon-400/70 text-neon-300 bg-space-900/85 backdrop-blur-sm"
+                : "border-space-600/70 text-ink-dim bg-space-900/75 backdrop-blur-sm hover:text-ink hover:border-neon-400/50"
+            }`}
+        >
+          {musicOn ? (
+            <>
+              <span className="eq" style={{ "--eq-dur": `${(60 / musicBpm) * 2}s` } as React.CSSProperties}>
+                <span /><span /><span /><span />
+              </span>
+              <span className="flex flex-col items-start leading-tight">
+                <span className="text-[10px] font-medium text-ink-dim">در حال پخش</span>
+                <span className="text-[12.5px]">{musicTitle}</span>
+              </span>
+            </>
+          ) : (
+            <>
+              <IconMute className="w-4.5 h-4.5" />
+              <span className="flex flex-col items-start leading-tight">
+                <span className="text-[12.5px]">موسیقی سیاره‌ها</span>
+                <span className="text-[10px] font-medium text-ink-faint">برای پخش کلیک کنید</span>
+              </span>
+            </>
+          )}
+        </button>
+
+        <InfoPanel
+          key={selectedId ?? "none"}
+          body={selectedBody}
+          onClose={() => setSelectedId(null)}
+          musicPlaying={musicOn && !!selectedId}
+          musicTitle={musicTitle}
+        />
       </main>
 
       {/* footer: quick-nav + control dock */}

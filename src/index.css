@@ -161,6 +161,38 @@ input[type="range"].speed-slider::-moz-range-thumb {
   box-shadow: 0 0 0 2px rgba(255, 194, 75, 0.65), 0 0 14px rgba(255, 194, 75, 0.55);
 }
 
+/* ---------- music equalizer ---------- */
+.eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+.eq span {
+  width: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  height: 100%;
+  transform-origin: bottom;
+  animation: eq-bounce var(--eq-dur, 0.5s) ease-in-out infinite;
+}
+.eq span:nth-child(2) { animation-delay: calc(var(--eq-dur, 0.5s) * -0.33); }
+.eq span:nth-child(3) { animation-delay: calc(var(--eq-dur, 0.5s) * -0.66); }
+.eq span:nth-child(4) { animation-delay: calc(var(--eq-dur, 0.5s) * -0.15); }
+@keyframes eq-bounce {
+  0%, 100% { transform: scaleY(0.25); }
+  50%      { transform: scaleY(1); }
+}
+.eq-paused span { animation-play-state: paused; transform: scaleY(0.25); }
+.eq-mini { height: 10px; gap: 1.5px; }
+.eq-mini span { width: 2px; }
+
+@keyframes chip-glow {
+  0%, 100% { box-shadow: 0 0 16px rgba(154, 69, 245, 0.3), 0 6px 24px rgba(0, 0, 0, 0.45); }
+  50%      { box-shadow: 0 0 30px rgba(190, 120, 255, 0.55), 0 6px 24px rgba(0, 0, 0, 0.45); }
+}
+.chip-glow { animation: chip-glow 3.2s ease-in-out infinite; }
+
 /* ---------- scrollbars ---------- */
 .thin-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
 .thin-scroll::-webkit-scrollbar-track { background: transparent; }

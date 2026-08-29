@@ -187,3 +187,32 @@ export function IconCode({ className, strokeWidth = 1.8 }: IconProps) {
     </svg>
   );
 }
+
+export function IconMusic({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg {...base(className)} strokeWidth={strokeWidth}>
+      <path d="M9 18.5V6.2l10-2v11.6" />
+      <circle cx="6.5" cy="18.5" r="2.5" fill="currentColor" stroke="none" />
+      <circle cx="16.5" cy="15.8" r="2.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function IconMute({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg {...base(className)} strokeWidth={strokeWidth}>
+      <path d="M11 5 6.5 9H3v6h3.5L11 19V5Z" />
+      <path d="m16 9.5 5 5M21 9.5l-5 5" />
+    </svg>
+  );
+}
+
+export function IconUfo({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg {...base(className)} strokeWidth={strokeWidth}>
+      <path d="M12 5a4 4 0 0 1 4 4H8a4 4 0 0 1 4-4Z" />
+      <path d="M3 12c0-1.7 4-3 9-3s9 1.3 9 3-4 3-9 3-9-1.3-9-3Z" />
+      <path d="M9.5 18.5 8.5 21M14.5 18.5l1 2.5M12 19v2.5" />
+    </svg>
+  );
+}
