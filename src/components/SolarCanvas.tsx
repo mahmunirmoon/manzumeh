@@ -20,6 +20,13 @@ interface Star {
 }
 interface Meteor { x: number; y: number; vx: number; vy: number; life: number; max: number; }
 interface Hit { id: string; x: number; y: number; r: number; }
+interface Asteroid {
+  x: number; y: number; vx: number; vy: number; r: number; rot: number; vr: number;
+  verts: number[]; craters: { dx: number; dy: number; r: number }[];
+}
+interface Rocket { x: number; y: number; vx: number; vy: number; ang: number; }
+interface BigComet { x: number; y: number; vx: number; vy: number; life: number; max: number; }
+interface Sparkle { x: number; y: number; life: number; max: number; r: number; c: string; }
 
 interface Sim {
   elapsed: number;
@@ -32,6 +39,32 @@ interface Sim {
   hoverId: string | null;
   hits: Hit[];
   w: number; h: number;
+  alien: { x: number; y: number; vx: number; baseY: number };
+  asteroids: Asteroid[];
+  rockets: Rocket[];
+  nextRocket: number;
+  comets: BigComet[];
+  nextComet: number;
+  sparkles: Sparkle[];
+  nextSparkle: number;
+}
+
+function makeAsteroids(w: number, h: number): Asteroid[] {
+  return Array.from({ length: 4 }, () => ({
+    x: Math.random() * w,
+    y: Math.random() * h,
+    vx: (Math.random() - 0.5) * 22,
+    vy: (Math.random() - 0.5) * 14,
+    r: 6 + Math.random() * 9,
+    rot: Math.random() * Math.PI * 2,
+    vr: (Math.random() - 0.5) * 1.6,
+    verts: Array.from({ length: 8 }, () => 0.68 + Math.random() * 0.5),
+    craters: Array.from({ length: 3 }, () => ({
+      dx: (Math.random() - 0.5) * 0.9,
+      dy: (Math.random() - 0.5) * 0.9,
+      r: 0.14 + Math.random() * 0.16,
+    })),
+  }));
 }
 
 const STAR_COLORS = ["#e9dcff", "#e9dcff", "#f3edff", "#ffe9c4", "#c9b2ff", "#dfe8ff"];
@@ -65,6 +98,11 @@ function SolarCanvasInner(props: SolarCanvasProps) {
     cx: 0, cy: 0, scale: 0.8,
     stars: [], meteors: [], nextMeteor: 6,
     hoverId: null, hits: [], w: 0, h: 0,
+    alien: { x: -150, y: 110, vx: 38, baseY: 110 },
+    asteroids: [],
+    rockets: [], nextRocket: 7,
+    comets: [], nextComet: 4,
+    sparkles: [], nextSparkle: 1.5,
   });
 
   /* reset simulation clock */
@@ -105,6 +143,11 @@ function SolarCanvasInner(props: SolarCanvasProps) {
       if (sim.cx === 0) {
         sim.cx = rect.width / 2;
         sim.cy = rect.height / 2;
+        sim.alien.baseY = 60 + Math.random() * Math.max(60, rect.height * 0.28);
+        sim.alien.y = sim.alien.baseY;
+      }
+      if (sim.asteroids.length === 0 && rect.width > 0) {
+        sim.asteroids = makeAsteroids(rect.width, rect.height);
       }
       makeStars();
     };
@@ -196,6 +239,162 @@ function SolarCanvasInner(props: SolarCanvasProps) {
       ctx.fillText(text, x, ry + h / 2 + 0.5);
     };
 
+    /* ---- cute little rocket ---- */
+    const drawRocket = (x: number, y: number, ang: number, tt: number) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(ang);
+      const fl = 16 + Math.sin(tt * 42) * 6 + Math.random() * 3;
+      const fg = ctx.createLinearGradient(-12, 0, -12 - fl, 0);
+      fg.addColorStop(0, "rgba(255,230,150,0.95)");
+      fg.addColorStop(0.4, "rgba(255,150,60,0.8)");
+      fg.addColorStop(1, "rgba(255,90,40,0)");
+      ctx.fillStyle = fg;
+      ctx.beginPath();
+      ctx.moveTo(-11, -3.4);
+      ctx.lineTo(-11 - fl, 0);
+      ctx.lineTo(-11, 3.4);
+      ctx.closePath();
+      ctx.fill();
+      const bg = ctx.createLinearGradient(0, -5, 0, 5);
+      bg.addColorStop(0, "#f4f0ff");
+      bg.addColorStop(1, "#b9a8d8");
+      ctx.fillStyle = bg;
+      ctx.beginPath();
+      ctx.moveTo(16, 0);
+      ctx.quadraticCurveTo(8, -6.5, -6, -5);
+      ctx.lineTo(-11, -3.4);
+      ctx.lineTo(-11, 3.4);
+      ctx.lineTo(-6, 5);
+      ctx.quadraticCurveTo(8, 6.5, 16, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#ff5d8f";
+      ctx.beginPath();
+      ctx.moveTo(16, 0);
+      ctx.quadraticCurveTo(11, -4.6, 7, -5.4);
+      ctx.lineTo(7, 5.4);
+      ctx.quadraticCurveTo(11, 4.6, 16, 0);
+      ctx.fill();
+      ctx.fillStyle = "#7ee8fa";
+      ctx.strokeStyle = "#4a3a6e";
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.arc(1, 0, 3.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#ff5d8f";
+      ctx.beginPath();
+      ctx.moveTo(-6, -5); ctx.lineTo(-13, -10); ctx.lineTo(-11, -3.4); ctx.closePath();
+      ctx.moveTo(-6, 5); ctx.lineTo(-13, 10); ctx.lineTo(-11, 3.4); ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    };
+
+    /* ---- friendly alien in a UFO ---- */
+    const drawAlien = (x: number, y: number, t: number) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(Math.sin(t * 1.7) * 0.07);
+
+      /* abduction beam, every now and then */
+      const beamPhase = t % 11;
+      if (beamPhase < 3) {
+        const bk = Math.sin((beamPhase / 3) * Math.PI);
+        const bg = ctx.createLinearGradient(0, 8, 0, 92);
+        bg.addColorStop(0, `rgba(140,255,230,${0.3 * bk})`);
+        bg.addColorStop(1, "rgba(140,255,230,0)");
+        ctx.fillStyle = bg;
+        ctx.beginPath();
+        ctx.moveTo(-10, 8);
+        ctx.lineTo(-30, 92);
+        ctx.lineTo(30, 92);
+        ctx.lineTo(10, 8);
+        ctx.closePath();
+        ctx.fill();
+        for (let i = 0; i < 3; i++) {
+          const py = 84 - ((t * 30 + i * 26) % 74);
+          ctx.fillStyle = `rgba(200,255,240,${0.5 * bk})`;
+          ctx.beginPath();
+          ctx.arc(Math.sin(t * 3 + i) * 8, py, 1.6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      /* saucer body */
+      const sg = ctx.createLinearGradient(0, -4, 0, 12);
+      sg.addColorStop(0, "#cfc3ec");
+      sg.addColorStop(0.5, "#8d7fb5");
+      sg.addColorStop(1, "#4e4370");
+      ctx.fillStyle = sg;
+      ctx.beginPath();
+      ctx.ellipse(0, 4, 30, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(30,20,50,0.6)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      /* blinking rim lights */
+      const lightColors = ["#ff5d8f", "#7ee8fa", "#ffd166"];
+      for (let i = 0; i < 5; i++) {
+        const lx = -24 + i * 12;
+        const on = Math.sin(t * 6 + i * 1.7) > -0.2;
+        ctx.fillStyle = on ? lightColors[i % 3] : "rgba(60,50,90,0.8)";
+        ctx.beginPath();
+        ctx.arc(lx, 8.5, 2.1, 0, Math.PI * 2);
+        ctx.fill();
+        if (on) {
+          ctx.globalAlpha = 0.35;
+          ctx.beginPath();
+          ctx.arc(lx, 8.5, 4.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      /* glass dome */
+      ctx.fillStyle = "rgba(170,220,255,0.22)";
+      ctx.strokeStyle = "rgba(200,235,255,0.65)";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(0, 2, 15, Math.PI, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      /* alien head */
+      ctx.fillStyle = "#7ee08a";
+      ctx.beginPath();
+      ctx.ellipse(0, -5, 7.5, 8.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#5cbf6b";
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(-3, -12); ctx.quadraticCurveTo(-6, -18, -7, -20);
+      ctx.moveTo(3, -12); ctx.quadraticCurveTo(6, -18, 7, -20);
+      ctx.stroke();
+      ctx.fillStyle = "#ff5d8f";
+      ctx.beginPath(); ctx.arc(-7, -20.5, 1.8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#7ee8fa";
+      ctx.beginPath(); ctx.arc(7, -20.5, 1.8, 0, Math.PI * 2); ctx.fill();
+
+      /* big curious eyes looking around */
+      const look = Math.sin(t * 0.9) * 1.6;
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath(); ctx.ellipse(-3, -6, 2.6, 3.2, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(3, -6, 2.6, 3.2, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#1c1030";
+      ctx.beginPath(); ctx.arc(-3 + look, -5.6, 1.3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(3 + look, -5.6, 1.3, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#2e7d43";
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      ctx.arc(0, -2.4, 2.6, 0.25, Math.PI - 0.25);
+      ctx.stroke();
+
+      ctx.restore();
+    };
+
     const draw = (t: number) => {
       const p = propsRef.current;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -238,6 +437,48 @@ function SolarCanvasInner(props: SolarCanvasProps) {
         ctx.lineTo(tailX, tailY);
         ctx.stroke();
       }
+
+      /* big comets (background) */
+      for (const c of sim.comets) {
+        const k = 1 - c.life / c.max;
+        const tx = c.x - c.vx * 0.5;
+        const ty = c.y - c.vy * 0.5;
+        const g = ctx.createLinearGradient(c.x, c.y, tx, ty);
+        g.addColorStop(0, `rgba(150,240,255,${0.8 * k})`);
+        g.addColorStop(0.45, `rgba(190,140,255,${0.4 * k})`);
+        g.addColorStop(1, "rgba(190,140,255,0)");
+        ctx.strokeStyle = g;
+        ctx.lineWidth = 2.4;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(c.x, c.y);
+        ctx.lineTo(tx, ty);
+        ctx.stroke();
+        const halo = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, 9);
+        halo.addColorStop(0, `rgba(230,250,255,${0.9 * k})`);
+        halo.addColorStop(1, "rgba(230,250,255,0)");
+        ctx.fillStyle = halo;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, 9, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      /* twinkling star sparkles */
+      for (const spk of sim.sparkles) {
+        const k = Math.sin((spk.life / spk.max) * Math.PI);
+        ctx.save();
+        ctx.translate(spk.x, spk.y);
+        ctx.rotate(spk.life * 2);
+        ctx.strokeStyle = spk.c;
+        ctx.globalAlpha = 0.85 * k;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(-spk.r, 0); ctx.lineTo(spk.r, 0);
+        ctx.moveTo(0, -spk.r); ctx.lineTo(0, spk.r);
+        ctx.stroke();
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
 
       const { cx, cy } = sim;
       const s = sim.scale;
@@ -425,6 +666,43 @@ function SolarCanvasInner(props: SolarCanvasProps) {
       if (p.showLabels || p.selectedId === "sun" || sim.hoverId === "sun") {
         drawLabel("خورشید", cx, cy + sunPx + 10, "#ffc24b", p.selectedId === "sun");
       }
+
+      /* ---- playful foreground: tumbling asteroids ---- */
+      for (const ast of sim.asteroids) {
+        ctx.save();
+        ctx.translate(ast.x, ast.y);
+        ctx.rotate(ast.rot);
+        const ag = ctx.createRadialGradient(-ast.r * 0.35, -ast.r * 0.35, ast.r * 0.1, 0, 0, ast.r);
+        ag.addColorStop(0, "#a89a8c");
+        ag.addColorStop(1, "#5c534c");
+        ctx.fillStyle = ag;
+        ctx.beginPath();
+        ast.verts.forEach((vr, i) => {
+          const ang = (i / ast.verts.length) * Math.PI * 2;
+          const px = Math.cos(ang) * vr * ast.r;
+          const py = Math.sin(ang) * vr * ast.r;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        });
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "rgba(50,42,38,0.5)";
+        for (const cr of ast.craters) {
+          ctx.beginPath();
+          ctx.arc(cr.dx * ast.r, cr.dy * ast.r, cr.r * ast.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      /* rockets flying by */
+      for (let i = 0; i < sim.rockets.length; i++) {
+        const r = sim.rockets[i];
+        drawRocket(r.x, r.y, r.ang, t + i * 3);
+      }
+
+      /* the friendly alien, always patrolling */
+      drawAlien(sim.alien.x, sim.alien.y, t);
     };
 
     /* ---------- animation loop ---------- */
@@ -442,6 +720,75 @@ function SolarCanvasInner(props: SolarCanvasProps) {
         m.y += m.vy * dt;
         m.life += dt;
       }
+
+      /* ---- playful entities ---- */
+      const al = sim.alien;
+      al.x += al.vx * dt;
+      if (al.x > sim.w + 160) {
+        al.x = -160;
+        al.baseY = 50 + Math.random() * Math.max(70, sim.h * 0.3);
+        al.vx = 26 + Math.random() * 34;
+      }
+      al.y = al.baseY + Math.sin(t * 1.1) * 22;
+
+      for (const ast of sim.asteroids) {
+        ast.x += ast.vx * dt;
+        ast.y += ast.vy * dt;
+        ast.rot += ast.vr * dt;
+        if (ast.x < -60) ast.x = sim.w + 55;
+        if (ast.x > sim.w + 60) ast.x = -55;
+        if (ast.y < -60) ast.y = sim.h + 55;
+        if (ast.y > sim.h + 60) ast.y = -55;
+      }
+
+      if (t > sim.nextRocket) {
+        sim.nextRocket = t + 14 + Math.random() * 12;
+        const fromLeft = Math.random() > 0.5;
+        const sp = 130 + Math.random() * 80;
+        const vy = (Math.random() - 0.6) * 60;
+        const vx = fromLeft ? sp : -sp;
+        sim.rockets.push({
+          x: fromLeft ? -40 : sim.w + 40,
+          y: sim.h * (0.12 + Math.random() * 0.5),
+          vx, vy,
+          ang: Math.atan2(vy, vx),
+        });
+      }
+      for (const r of sim.rockets) {
+        r.x += r.vx * dt;
+        r.y += r.vy * dt;
+      }
+      sim.rockets = sim.rockets.filter((r) => r.x > -90 && r.x < sim.w + 90);
+
+      if (t > sim.nextComet) {
+        sim.nextComet = t + 9 + Math.random() * 8;
+        sim.comets.push({
+          x: sim.w * (0.2 + Math.random() * 0.7),
+          y: -20,
+          vx: -(120 + Math.random() * 120),
+          vy: 90 + Math.random() * 90,
+          life: 0,
+          max: 2.2 + Math.random() * 1.2,
+        });
+      }
+      for (const c of sim.comets) {
+        c.x += c.vx * dt;
+        c.y += c.vy * dt;
+        c.life += dt;
+      }
+      sim.comets = sim.comets.filter((c) => c.life < c.max && c.y < sim.h + 40);
+
+      if (t > sim.nextSparkle && sim.stars.length > 0) {
+        sim.nextSparkle = t + 1.6 + Math.random() * 2;
+        const st = sim.stars[Math.floor(Math.random() * sim.stars.length)];
+        sim.sparkles.push({
+          x: st.x, y: st.y, life: 0, max: 0.9,
+          r: 4 + Math.random() * 5,
+          c: Math.random() > 0.5 ? "#e9dcff" : "#ffe9c4",
+        });
+      }
+      for (const spk of sim.sparkles) spk.life += dt;
+      sim.sparkles = sim.sparkles.filter((spk) => spk.life < spk.max);
 
       const tc = targetCenter();
       const ts = targetScale();

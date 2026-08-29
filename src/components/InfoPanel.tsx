@@ -7,6 +7,7 @@ import {
   IconDistance,
   IconGauge,
   IconMoon,
+  IconMusic,
   IconRuler,
   IconSparkle,
 } from "./Icons";
@@ -14,6 +15,8 @@ import {
 interface Props {
   body: Body | null;
   onClose: () => void;
+  musicPlaying?: boolean;
+  musicTitle?: string;
 }
 
 function StatRow({
@@ -39,7 +42,7 @@ function StatRow({
   );
 }
 
-export function InfoPanel({ body, onClose }: Props) {
+export function InfoPanel({ body, onClose, musicPlaying, musicTitle }: Props) {
   if (!body) return null;
 
   const ratio = body.diameterKm / EARTH_DIAMETER;
@@ -84,6 +87,18 @@ export function InfoPanel({ body, onClose }: Props) {
               {body.typeLabel}
             </span>
           </div>
+          {musicPlaying && (
+            <div className="mt-2 inline-flex items-center gap-1.5 text-[10.5px] font-medium text-neon-300">
+              <IconMusic className="w-3.5 h-3.5" />
+              <span>
+                ملودی این سیاره در حال پخش
+                {musicTitle ? `: ${musicTitle}` : ""}
+              </span>
+              <span className="eq eq-mini" style={{ "--eq-dur": "0.45s" } as React.CSSProperties}>
+                <span /><span /><span />
+              </span>
+            </div>
+          )}
         </div>
         <button
           onClick={onClose}
