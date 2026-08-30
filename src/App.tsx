@@ -3,15 +3,18 @@ import { SolarCanvas } from "./components/SolarCanvas";
 import { InfoPanel } from "./components/InfoPanel";
 import { ControlDock } from "./components/ControlDock";
 import { BodyNav } from "./components/BodyNav";
-import { getBody } from "./data/bodies";
+import { getBody, type Mode } from "./data/bodies";
 import {
   IconCursor,
+  IconGamepad,
   IconMusic,
   IconMute,
   IconSparkle,
   IconSpeaker,
   IconSunMini,
 } from "./components/Icons";
+import { ModeSwitch } from "./components/ModeSwitch";
+import { QuizModal } from "./components/QuizModal";
 import { fmt1, toFa } from "./lib/format";
 import {
   disableMusic,
@@ -25,6 +28,15 @@ import {
 } from "./lib/music";
 
 const UNLOCK_KEY = "manzumeh-audio-unlocked";
+const MODE_KEY = "manzumeh:mode";
+
+function loadMode(): Mode {
+  try {
+    return localStorage.getItem(MODE_KEY) === "child" ? "child" : "normal";
+  } catch {
+    return "normal";
+  }
+}
 
 export default function App() {
   const [playing, setPlaying] = useState(true);
@@ -37,6 +49,8 @@ export default function App() {
   const [elapsed, setElapsed] = useState(0);
   const [hintSeen, setHintSeen] = useState(false);
   const [musicOn, setMusicOn] = useState(false);
+  const [mode, setMode] = useState<Mode>(loadMode);
+  const [quizOpen, setQuizOpen] = useState(false);
   const [audioReady, setAudioReady] = useState<boolean>(() => isAudioReady());
   const [unlockedOnce, setUnlockedOnce] = useState<boolean>(() => {
     try {
@@ -45,6 +59,15 @@ export default function App() {
       return false;
     }
   });
+
+  /* persist the content mode (child / normal) */
+  useEffect(() => {
+    try {
+      localStorage.setItem(MODE_KEY, mode);
+    } catch {
+      /* private mode — ignore */
+    }
+  }, [mode]);
 
   const trackId = selectedId ?? "space";
   const musicTitle = trackTitle(trackId);
@@ -155,6 +178,7 @@ export default function App() {
           </div>
         </div>
         <div className="rise-in order-2 flex flex-wrap items-center justify-end gap-1.5 md:gap-2" style={{ animationDelay: "0.1s" }}>
+          <ModeSwitch mode={mode} onChange={setMode} />
           <span className="hidden sm:inline-flex items-center gap-1.5 text-[12.5px] font-bold text-ink-dim border border-space-600/60 rounded-full px-3.5 py-2 bg-space-900/60">
             سرعت:
             <b className="text-solar-300 text-[13.5px]">{speed < 10 ? fmt1(speed) : toFa(Math.round(speed))}</b>
@@ -229,6 +253,19 @@ export default function App() {
           </button>
         )}
 
+        {/* mini-game trigger — «حدس بزن کدام سیاره است» */}
+        <button
+          onClick={() => setQuizOpen(true)}
+          title="بازی حدس بزن کدام سیاره است"
+          className={`absolute z-20 ${showUnlockButton ? "bottom-[64px] md:bottom-[72px]" : "bottom-3 md:bottom-4"} left-3 md:left-4
+            flex items-center gap-2 rounded-full border border-neon-400/60 bg-space-900/85 backdrop-blur-sm px-3 py-2.5
+            text-[12.5px] font-extrabold text-neon-300 shadow-[0_8px_28px_rgba(154,69,245,0.28)]
+            hover:border-neon-300 hover:text-ink hover:-translate-y-px active:translate-y-0 transition-all duration-200`}
+        >
+          <IconGamepad className="w-5 h-5 text-solar-400 shrink-0" />
+          <span className="hidden min-[380px]:inline">بازی حدس سیاره</span>
+        </button>
+
         {/* music chip — each planet has its own tune */}
         <button
           onClick={toggleMusic}
@@ -268,9 +305,13 @@ export default function App() {
         key={selectedId ?? "none"}
         body={selectedBody}
         onClose={() => setSelectedId(null)}
+        mode={mode}
         musicPlaying={musicOn && !!selectedId}
         musicTitle={musicTitle}
       />
+
+      {/* ============ mini-game: «حدس بزن کدام سیاره است» ============ */}
+      <QuizModal open={quizOpen} onClose={() => setQuizOpen(false)} mode={mode} />
 
       {/* ============ 4/6/7/8) planet selector + simulation controls ============ */}
       <footer

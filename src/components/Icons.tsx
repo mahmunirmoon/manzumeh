@@ -186,3 +186,48 @@ export function IconUfo({ className, strokeWidth = 1.8 }: IconProps) {
     </svg>
   );
 }
+
+export function IconGamepad({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg {...base(className)} strokeWidth={strokeWidth}>
+      <path d="M7.5 6.5h9a5.5 5.5 0 0 1 5.4 6.6l-.8 4a2.6 2.6 0 0 1-4.6 1.1L14.6 16H9.4l-1.9 2.2a2.6 2.6 0 0 1-4.6-1.1l-.8-4A5.5 5.5 0 0 1 7.5 6.5Z" />
+      <path d="M8 10v3M6.5 11.5h3" />
+      <circle cx="15.5" cy="10.5" r="0.9" fill="currentColor" stroke="none" />
+      <circle cx="18" cy="12.8" r="0.9" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function IconScale({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg {...base(className)} strokeWidth={strokeWidth}>
+      <path d="M12 4v16M7 20h10M12 4c-3.5 0-6 1.6-7.5 3.5M12 4c3.5 0 6 1.6 7.5 3.5" />
+      <path d="M4.5 7.5 2 13a2.8 2.8 0 0 0 5 0L4.5 7.5ZM19.5 7.5 17 13a2.8 2.8 0 0 0 5 0l-2.5-5.5Z" />
+    </svg>
+  );
+}
+
+export function IconBook({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg {...base(className)} strokeWidth={strokeWidth}>
+      <path d="M12 6.5C10.5 5 8.4 4.5 4 4.5v13c4.4 0 6.5.5 8 2 1.5-1.5 3.6-2 8-2v-13c-4.4 0-6.5.5-8 2Z" />
+      <path d="M12 6.5v13" />
+    </svg>
+  );
+}
+
+export function IconStar({ className, strokeWidth = 1.8 }: IconProps) {
+  return (
+    <svg {...base(className)} strokeWidth={strokeWidth}>
+      <path d="m12 3.5 2.5 5.2 5.7.7-4.2 4 1.1 5.6L12 16.2 6.9 19l1.1-5.6-4.2-4 5.7-.7L12 3.5Z" />
+    </svg>
+  );
+}
+
+export function IconCheck({ className, strokeWidth = 2.2 }: IconProps) {
+  return (
+    <svg {...base(className)} strokeWidth={strokeWidth}>
+      <path d="m5 12.5 4.5 4.5L19 7" />
+    </svg>
+  );
+}
