@@ -122,21 +122,21 @@ export default function App() {
       </div>
 
       {/* header */}
-      <header className="relative z-20 flex items-center justify-between px-4 md:px-6 pt-3 pb-1 shrink-0">
-        <div className="rise-in flex items-center gap-3">
-          <span className="text-solar-400">
-            <IconSunMini className="w-9 h-9 spin-slow" />
+      <header className="relative z-20 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-3 sm:px-4 md:px-6 pt-2.5 md:pt-3 pb-1 shrink-0">
+        <div className="rise-in flex items-center gap-2.5 md:gap-3 min-w-0">
+          <span className="text-solar-400 shrink-0">
+            <IconSunMini className="w-9 h-9 md:w-11 md:h-11 spin-slow drop-shadow-[0_0_14px_rgba(255,170,60,0.65)]" />
           </span>
-          <div>
-            <h1 className="font-display text-[38px] md:text-[48px] leading-[1.05] glow-soft">
+          <div className="min-w-0">
+            <h1 className="font-display text-[clamp(27px,7.5vw,48px)] leading-[1.08] glow-soft">
               منظومهٔ <span className="glow-amber">شمسی</span>
             </h1>
-            <p className="text-sm md:text-[15.5px] font-bold text-ink/95 mt-0.5">
+            <p className="text-[12.5px] sm:text-sm md:text-[15.5px] font-bold text-ink/95 mt-0.5 leading-5 break-words">
               آزمایشگاه تعاملی مدارها · <span className="glow-violet">روی هر سیاره کلیک کنید</span>
             </p>
           </div>
         </div>
-        <div className="rise-in flex items-center gap-2" style={{ animationDelay: "0.1s" }}>
+        <div className="rise-in order-2 flex flex-wrap items-center justify-end gap-1.5 md:gap-2" style={{ animationDelay: "0.1s" }}>
           <span className="hidden sm:inline-flex items-center gap-1.5 text-[12.5px] font-bold text-ink-dim border border-space-600/60 rounded-full px-3.5 py-2 bg-space-900/60">
             سرعت:
             <b className="text-solar-300 text-[13.5px]">{speed < 10 ? fmt1(speed) : toFa(Math.round(speed))}</b>
@@ -155,7 +155,8 @@ export default function App() {
             onClick={handleDownloadHost}
             disabled={hostState === "busy"}
             title="دانلود نسخهٔ نهاییِ آمادهٔ آپلود روی هاست و دامنه (بدون نیاز به npm)"
-            className={`inline-flex items-center gap-1.5 text-[12px] font-bold rounded-full px-3.5 py-1.5 border transition-all duration-200
+            aria-label="دانلود نسخهٔ هاست"
+            className={`inline-flex items-center gap-1.5 text-[12px] font-bold rounded-full px-3.5 py-2 md:py-1.5 border transition-all duration-200
               ${
                 hostState === "done"
                   ? "border-comet/70 text-comet bg-comet/10"
@@ -175,7 +176,8 @@ export default function App() {
             onClick={handleDownloadZip}
             disabled={zipState === "busy"}
             title={`دانلود ${toFa(projectFileCount())} فایلِ منبع پروژه برای GitHub یا توسعهٔ محلی`}
-            className={`inline-flex items-center gap-1.5 text-[12px] font-bold rounded-full px-3.5 py-1.5 border transition-all duration-200
+            aria-label="دانلود سورس پروژه"
+            className={`inline-flex items-center gap-1.5 text-[12px] font-bold rounded-full px-3.5 py-2 md:py-1.5 border transition-all duration-200
               ${
                 zipState === "done"
                   ? "border-comet/70 text-comet bg-comet/10"
@@ -191,14 +193,14 @@ export default function App() {
               {zipState === "done" ? "دانلود شد" : zipState === "busy" ? "در حال آماده‌سازی…" : "سورس پروژه"}
             </span>
           </button>
-          <span className="neon-breathe inline-flex items-center gap-2 rounded-full px-3.5 py-1 border border-neon-400/70 text-neon-300 bg-neon-500/15">
-            <IconSparkle className="w-4 h-4 shrink-0" />
-            <span className="flex flex-col items-start leading-tight text-start">
-              <span className="text-[12px] font-bold">طراحی توسط امیرعلی</span>
-              <span className="text-[10px] font-medium text-neon-300/80">از شاگردان خانم دکتر آقایی.</span>
-            </span>
-          </span>
         </div>
+        <span className="neon-breathe order-3 w-full md:w-auto inline-flex items-center justify-center md:justify-start gap-2 rounded-full px-3.5 py-1.5 border border-neon-400/70 text-neon-300 bg-neon-500/15">
+          <IconSparkle className="w-4 h-4 shrink-0" />
+          <span className="flex flex-col items-center md:items-start leading-tight text-center md:text-start">
+            <span className="text-[12px] font-bold">طراحی توسط امیرعلی</span>
+            <span className="text-[10.5px] font-semibold text-neon-300/80">از شاگردان خانم دکتر آقایی.</span>
+          </span>
+        </span>
       </header>
 
       {/* simulation stage */}
@@ -219,11 +221,11 @@ export default function App() {
         {!hintSeen && !selectedId && (
           <button
             onClick={() => setHintSeen(true)}
-            className="float-hint absolute z-20 top-5 left-1/2 flex items-center gap-2 text-sm font-bold text-ink
-              border border-neon-400/60 bg-space-900/85 backdrop-blur-sm rounded-full px-5 py-2.5 shadow-[0_8px_30px_rgba(154,69,245,0.35)]
+            className="float-hint absolute z-20 top-4 left-1/2 max-w-[calc(100%-1.75rem)] flex items-center justify-center gap-2 text-[13px] md:text-sm font-bold text-ink text-center leading-6
+              border border-neon-400/60 bg-space-900/88 backdrop-blur-sm rounded-2xl md:rounded-full px-4 md:px-5 py-2.5 shadow-[0_8px_30px_rgba(154,69,245,0.35)]
               hover:border-solar-400/70 transition-colors"
           >
-            <IconCursor className="w-5 h-5 text-solar-400" />
+            <IconCursor className="w-5 h-5 text-solar-400 shrink-0" />
             روی خورشید یا هر <span className="glow-amber">سیاره</span> کلیک کنید تا مشخصات و ملودی‌اش را ببینید
           </button>
         )}
@@ -270,11 +272,11 @@ export default function App() {
       </main>
 
       {/* footer: quick-nav + control dock */}
-      <footer className="relative z-20 shrink-0 pb-2.5 pt-1 flex flex-col items-center gap-2 pointer-events-none">
-        <div className="pointer-events-auto max-w-full rise-in" style={{ animationDelay: "0.15s" }}>
+      <footer className="relative z-20 shrink-0 w-full pb-[max(10px,env(safe-area-inset-bottom))] pt-1 flex flex-col items-center gap-1.5 md:gap-2 pointer-events-none">
+        <div className="pointer-events-auto w-full max-w-full rise-in" style={{ animationDelay: "0.15s" }}>
           <BodyNav selectedId={selectedId} onSelect={(id) => handleSelect(id)} />
         </div>
-        <div className="pointer-events-auto max-w-full px-2 rise-in" style={{ animationDelay: "0.22s" }}>
+        <div className="pointer-events-auto w-full max-w-full px-1.5 md:px-2 rise-in" style={{ animationDelay: "0.22s" }}>
           <ControlDock
             playing={playing}
             onTogglePlay={togglePlay}
