@@ -128,10 +128,10 @@
       <div><label for="owner">مالک مخزن</label><input id="owner" value="mahmunirmoon" /></div>
       <div><label for="repo">نام مخزن</label><input id="repo" value="manzumeh" /></div>
       <div><label for="base">شاخهٔ پایه</label><input id="base" value="main" /></div>
-      <div><label for="branch">شاخهٔ جدید</label><input id="branch" value="task/mobile-rebuild-audio-contact" /></div>
+      <div><label for="branch">شاخهٔ جدید</label><input id="branch" value="feature/planet-extras" /></div>
     </div>
     <label for="msg">پیام کامیت</label>
-    <input id="msg" value="feat: چیدمان موبایل اسکرول‌شونده، رفع صدای موبایل، حذف دانلود پروژه، شماره تماس استاد" />
+    <input id="msg" value="feat: سه قابلیت جدید — وزن روی سیاره، حالت کودک/عادی، مینی‌گیم حدس سیاره" />
   </div>
 
   <button class="go" id="go" disabled>🚀 انتشار و ساخت Pull Request</button>
@@ -144,10 +144,9 @@
 
   <details>
     <summary>روش جایگزین بدون توکن (آپلود از وب‌سایت GitHub)</summary>
-    <p>۱) در <a href="https://github.com/mahmunirmoon/manzumeh" target="_blank">مخزن</a> از منوی شاخه‌ها، شاخهٔ <code>task/mobile-rebuild-audio-contact</code> را بسازید.
-    ۲) Add file → Upload files → پوشه‌های <code>src</code> و <code>.github</code> و فایل‌های <code>index.html</code> و <code>README.md</code> را بکشید و Commit بزنید.
-    ۳) فایل <code>src/lib/projectFiles.ts</code> را از همان وب‌سایت Delete کنید.
-    ۴) <a id="altlink" href="https://github.com/mahmunirmoon/manzumeh/compare/main...task/mobile-rebuild-audio-contact" target="_blank">ساخت Pull Request</a> را بزنید.</p>
+    <p>۱) در <a href="https://github.com/mahmunirmoon/manzumeh" target="_blank">مخزن</a> از منوی شاخه‌ها، شاخهٔ <code>feature/planet-extras</code> را بسازید (اگر بود، نام جدیدی مثل <code>feature/planet-extras-2</code> بگذارید).
+    ۲) Add file → Upload files → پوشهٔ <code>src</code> و فایل‌های <code>index.html</code> و <code>README.md</code> را بکشید و Commit بزنید.
+    ۳) <a id="altlink" href="https://github.com/mahmunirmoon/manzumeh/compare/main...feature/planet-extras" target="_blank">ساخت Pull Request</a> را بزنید — چون شاخه تازه است، PR جدیدی غیر از #9 ساخته می‌شود.</p>
   </details>
 
   <p class="note">این فایل یک ابزار انتشار مستقل است؛ جزو خود سایت نیست و هیچ تاثیری روی بیلد و ظاهر پروژه ندارد.</p>
@@ -319,47 +318,46 @@ $("#go").addEventListener("click", async () => {
     });
     log("   ✓ کامیت " + commit.sha.slice(0, 7), "ok");
 
-    log("۷) ساخت/بروزرسانی شاخهٔ " + branch + "…");
+    log("۷) ساخت شاخهٔ " + branch + "…");
+    /* هرگز شاخهٔ موجود را بازنویسی نمی‌کنیم — اگر نام تکراری بود، شاخهٔ یکتای جدید
+       می‌سازیم تا Pull Request حتماً تازه باشد و به PRهای قدیمی (مثل #9) گره نخورد. */
+    let finalBranch = branch;
     try {
       await api(`/repos/${owner}/${repo}/git/refs`, {
         method: "POST", body: JSON.stringify({ ref: "refs/heads/" + branch, sha: commit.sha }),
       });
     } catch (e) {
       if (/422|already exists/i.test(e.message)) {
-        await api(`/repos/${owner}/${repo}/git/refs/heads/${branch}`, {
-          method: "PATCH", body: JSON.stringify({ sha: commit.sha, force: true }),
+        finalBranch = branch + "-" + Date.now().toString(36);
+        log("   (شاخهٔ «" + branch + "» از قبل هست — شاخهٔ جدید «" + finalBranch + "» ساخته می‌شود)", "warn");
+        await api(`/repos/${owner}/${repo}/git/refs`, {
+          method: "POST", body: JSON.stringify({ ref: "refs/heads/" + finalBranch, sha: commit.sha }),
         });
-        log("   (شاخه از قبل بود — بروزرسانی شد)", "warn");
       } else throw e;
     }
-    log("   ✓ شاخه آماده است", "ok");
+    log("   ✓ شاخهٔ «" + finalBranch + "» آماده است", "ok");
 
-    log("۸) بازکردن Pull Request…");
+    log("۸) بازکردن Pull Request کاملاً جدید…");
     const body = [
-      "## تغییرات این نسخه",
-      "- [x] چیدمان موبایل اسکرول‌شوندهٔ عمودی (بدون هم‌پوشانی پنل‌ها)",
-      "- [x] رفع پخش موسیقی در موبایل (unlock با اولین لمس + resume)",
-      "- [x] حذف کامل قابلیت «دانلود پروژه / Download Project»",
-      "- [x] افزودن: شماره تماس استاد: 00971551544988",
+      "## سه قابلیت جدید آموزشی",
+      "- [x] «اگر روی این سیاره بودی...» — محاسبهٔ وزن روی هر سیاره با ضریب گرانش نسبی + ذخیره در localStorage",
+      "- [x] حالت کودک / حالت عادی — سوییچ در هدر + دانستنی‌های ساده‌شده برای کودکان",
+      "- [x] مینی‌گیم «حدس بزن کدام سیاره است» — ۵ سؤال با سرنخ، امتیاز و صفحهٔ نتیجه (واکنش‌گرا به حالت کودک)",
       "",
-      "Build: PASS · هیچ ارجاعی به /src/main.tsx در خروجی نیست.",
+      "## بدون تغییر در موارد موجود",
+      "موبایل/صدا/موزیک/GitHub Pages/RTL دست نخورده · Build: PASS",
+      "",
+      "شماره تماس استاد: 00971551544988 (حفظ شده)",
     ].join("\n");
-    let prUrl;
-    try {
-      const pr = await api(`/repos/${owner}/${repo}/pulls`, {
-        method: "POST",
-        body: JSON.stringify({
-          title: "نسخهٔ نهایی: موبایل + صدا + حذف دانلود + شماره تماس استاد",
-          head: branch, base, body,
-        }),
-      });
-      prUrl = pr.html_url;
-    } catch (e) {
-      if (/422|already exists/i.test(e.message)) {
-        prUrl = `https://github.com/${owner}/${repo}/compare/${base}...${branch}`;
-        log("   (PR از قبل باز بود — لینک مقایسه داده می‌شود)", "warn");
-      } else throw e;
-    }
+    const pr = await api(`/repos/${owner}/${repo}/pulls`, {
+      method: "POST",
+      body: JSON.stringify({
+        title: "feat: سه قابلیت جدید — وزن روی سیاره، حالت کودک، مینی‌گیم حدس سیاره",
+        head: finalBranch, base, body,
+      }),
+    });
+    const prUrl = pr.html_url;
+    log("   ✓ PR #" + pr.number + " ساخته شد", "ok");
     log("✅ تمام شد!", "ok");
     const res = $("#result"); res.classList.add("on");
     const a = $("#prlink"); a.href = prUrl; a.textContent = prUrl;
