@@ -1,6 +1,7 @@
-import type { Body } from "../data/bodies";
+import type { Body, Mode } from "../data/bodies";
 import { EARTH_DIAMETER } from "../data/bodies";
 import { fmt1, fmtInt, fmtPeriod, lightMinutes, toFa } from "../lib/format";
+import { WeightCalc } from "./WeightCalc";
 import {
   IconClock,
   IconClose,
@@ -15,6 +16,7 @@ import {
 interface Props {
   body: Body | null;
   onClose: () => void;
+  mode: Mode;
   musicPlaying?: boolean;
   musicTitle?: string;
 }
@@ -42,7 +44,7 @@ function StatRow({
   );
 }
 
-export function InfoPanel({ body, onClose, musicPlaying, musicTitle }: Props) {
+export function InfoPanel({ body, onClose, mode, musicPlaying, musicTitle }: Props) {
   if (!body) return null;
 
   const ratio = body.diameterKm / EARTH_DIAMETER;
@@ -166,17 +168,25 @@ export function InfoPanel({ body, onClose, musicPlaying, musicTitle }: Props) {
           </div>
         </div>
 
-        {/* fun fact */}
+        {/* fun fact — two levels: child / normal */}
         <div
-          className="mt-4 mb-2 p-3 rounded-lg border-s-2 bg-space-800/40"
+          className="mt-4 p-3 rounded-lg border-s-2 bg-space-800/40"
           style={{ borderColor: body.color }}
         >
           <div className="flex items-center gap-1.5 mb-1.5" style={{ color: body.color }}>
             <IconSparkle className="w-4 h-4" />
-            <span className="text-[13px] font-extrabold">دانستنی</span>
+            <span className="text-[13px] font-extrabold">
+              {mode === "child" ? "دانستی؟" : "دانستنی"}
+            </span>
           </div>
-          <p className="text-sm font-semibold leading-7 text-ink/95">{body.fact}</p>
+          <p className="text-sm font-semibold leading-7 text-ink/95">
+            {mode === "child" ? body.factChild : body.fact}
+          </p>
         </div>
+
+        {/* «اگر روی این سیاره بودی...» weight experiment */}
+        <WeightCalc body={body} mode={mode} />
+        <div className="h-2" />
       </div>
     </aside>
   );
