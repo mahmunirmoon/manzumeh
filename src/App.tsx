@@ -1,22 +1,30 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { SolarCanvas } from "./components/SolarCanvas";
 import { InfoPanel } from "./components/InfoPanel";
 import { ControlDock } from "./components/ControlDock";
 import { BodyNav } from "./components/BodyNav";
 import { getBody } from "./data/bodies";
 import {
-  IconCheck,
-  IconCode,
   IconCursor,
   IconMusic,
   IconMute,
-  IconServer,
   IconSparkle,
+  IconSpeaker,
   IconSunMini,
 } from "./components/Icons";
 import { fmt1, toFa } from "./lib/format";
-import { downloadHostReadyZip, downloadProjectZip, projectFileCount } from "./lib/projectFiles";
-import { disableMusic, enableMusic, setTrack, trackBpm, trackTitle } from "./lib/music";
+import {
+  disableMusic,
+  enableMusic,
+  isAudioReady,
+  onAudioReadyChange,
+  setTrack,
+  trackBpm,
+  trackTitle,
+  tryUnlockMusic,
+} from "./lib/music";
+
+const UNLOCK_KEY = "manzumeh-audio-unlocked";
 
 export default function App() {
   const [playing, setPlaying] = useState(true);
@@ -28,9 +36,15 @@ export default function App() {
   const [resetToken, setResetToken] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [hintSeen, setHintSeen] = useState(false);
-  const [zipState, setZipState] = useState<"idle" | "busy" | "done">("idle");
-  const [hostState, setHostState] = useState<"idle" | "busy" | "done">("idle");
   const [musicOn, setMusicOn] = useState(false);
+  const [audioReady, setAudioReady] = useState<boolean>(() => isAudioReady());
+  const [unlockedOnce, setUnlockedOnce] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem(UNLOCK_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
 
   const trackId = selectedId ?? "space";
   const musicTitle = trackTitle(trackId);
@@ -43,6 +57,8 @@ export default function App() {
         return false;
       }
       enableMusic(selectedId);
+      /* the tap itself is the user gesture — unlock right away */
+      void tryUnlockMusic();
       return true;
     });
   }, [selectedId]);
@@ -52,47 +68,37 @@ export default function App() {
     if (musicOn) setTrack(trackId);
   }, [musicOn, trackId]);
 
-  const handleDownloadHost = useCallback(async () => {
-    if (hostState === "busy") return;
-    setHostState("busy");
-    try {
-      await downloadHostReadyZip();
-      setHostState("done");
-      setTimeout(() => setHostState("idle"), 2400);
-    } catch {
-      setHostState("idle");
-    }
-  }, [hostState]);
+  /* ---------- mobile audio unlock ---------- */
+  useEffect(
+    () =>
+      onAudioReadyChange((ready) => {
+        setAudioReady(ready);
+        if (ready) {
+          setUnlockedOnce(true);
+          try {
+            sessionStorage.setItem(UNLOCK_KEY, "1");
+          } catch {
+            /* private mode — ignore */
+          }
+        }
+      }),
+    []
+  );
 
-  const handleDownloadZip = useCallback(async () => {
-    if (zipState === "busy") return;
-    setZipState("busy");
-    try {
-      await downloadProjectZip();
-      setZipState("done");
-      setTimeout(() => setZipState("idle"), 2400);
-    } catch {
-      setZipState("idle");
-    }
-  }, [zipState]);
-
-  const selectedBody = useMemo(() => getBody(selectedId), [selectedId]);
-
-  const handleElapsed = useCallback((days: number) => setElapsed(days), []);
-  const handleSelect = useCallback((id: string | null) => {
-    setSelectedId((prev) => (id && prev === id ? prev : id));
-    if (id) setHintSeen(true);
+  /* first real gesture anywhere on the page unlocks the AudioContext */
+  useEffect(() => {
+    const unlock = () => {
+      void tryUnlockMusic();
+    };
+    window.addEventListener("pointerdown", unlock);
+    window.addEventListener("touchstart", unlock, { passive: true });
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("touchstart", unlock);
+    };
   }, []);
 
-  const togglePlay = useCallback(() => setPlaying((v) => !v), []);
-  const reset = useCallback(() => {
-    setResetToken((t) => t + 1);
-  }, []);
-  const onToggle = useCallback((key: "orbits" | "labels" | "trails") => {
-    if (key === "orbits") setShowOrbits((v) => !v);
-    if (key === "labels") setShowLabels((v) => !v);
-    if (key === "trails") setShowTrails((v) => !v);
-  }, []);
+  const showUnlockButton = musicOn && !audioReady && !unlockedOnce;
 
   /* keyboard shortcuts */
   useEffect(() => {
@@ -110,18 +116,30 @@ export default function App() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [togglePlay, reset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const togglePlay = useCallback(() => setPlaying((p) => !p), []);
+  const reset = useCallback(() => {
+    setResetToken((t) => t + 1);
+    setElapsed(0);
+  }, []);
+
+  const selectedBody = getBody(selectedId);
 
   return (
-    <div dir="rtl" className="relative h-dvh w-full overflow-hidden flex flex-col space-bg text-ink font-body">
+    <div
+      dir="rtl"
+      className="relative flex min-h-dvh w-full flex-col overflow-x-clip space-bg font-body text-ink md:h-dvh md:overflow-hidden"
+    >
       {/* ambient nebulae */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div className="nebula nebula-a" />
         <div className="nebula nebula-b" />
         <div className="nebula nebula-c" />
       </div>
 
-      {/* header */}
+      {/* ============ 1) header / title ============ */}
       <header className="relative z-20 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-3 sm:px-4 md:px-6 pt-2.5 md:pt-3 pb-1 shrink-0">
         <div className="rise-in flex items-center gap-2.5 md:gap-3 min-w-0">
           <span className="text-solar-400 shrink-0">
@@ -151,70 +169,40 @@ export default function App() {
             <span className={`w-2 h-2 rounded-full ${playing ? "bg-solar-400 pulse-dot" : "bg-ink-faint"}`} />
             {playing ? "در حال گردش" : "متوقف"}
           </span>
-          <button
-            onClick={handleDownloadHost}
-            disabled={hostState === "busy"}
-            title="دانلود نسخهٔ نهاییِ آمادهٔ آپلود روی هاست و دامنه (بدون نیاز به npm)"
-            aria-label="دانلود نسخهٔ هاست"
-            className={`inline-flex items-center gap-1.5 text-[12px] font-bold rounded-full px-3.5 py-2 md:py-1.5 border transition-all duration-200
-              ${
-                hostState === "done"
-                  ? "border-comet/70 text-comet bg-comet/10"
-                  : "border-solar-400/70 text-solar-300 bg-solar-400/10 hover:bg-solar-400/25 hover:border-solar-400 hover:-translate-y-px active:translate-y-0 disabled:opacity-60 shadow-[0_0_16px_rgba(255,170,50,0.18)]"
-              }`}
-          >
-            {hostState === "done" ? (
-              <IconCheck className="w-4 h-4" />
-            ) : (
-              <IconServer className={`w-4 h-4 ${hostState === "busy" ? "animate-pulse" : ""}`} />
-            )}
-            <span className="hidden md:inline">
-              {hostState === "done" ? "دانلود شد" : hostState === "busy" ? "در حال بسته‌بندی…" : "نسخهٔ هاست"}
-            </span>
-          </button>
-          <button
-            onClick={handleDownloadZip}
-            disabled={zipState === "busy"}
-            title={`دانلود ${toFa(projectFileCount())} فایلِ منبع پروژه برای GitHub یا توسعهٔ محلی`}
-            aria-label="دانلود سورس پروژه"
-            className={`inline-flex items-center gap-1.5 text-[12px] font-bold rounded-full px-3.5 py-2 md:py-1.5 border transition-all duration-200
-              ${
-                zipState === "done"
-                  ? "border-comet/70 text-comet bg-comet/10"
-                  : "border-neon-400/60 text-neon-300 bg-neon-500/10 hover:bg-neon-500/25 hover:border-neon-400 hover:-translate-y-px active:translate-y-0 disabled:opacity-60"
-              }`}
-          >
-            {zipState === "done" ? (
-              <IconCheck className="w-4 h-4" />
-            ) : (
-              <IconCode className={`w-4 h-4 ${zipState === "busy" ? "animate-pulse" : ""}`} />
-            )}
-            <span className="hidden md:inline">
-              {zipState === "done" ? "دانلود شد" : zipState === "busy" ? "در حال آماده‌سازی…" : "سورس پروژه"}
-            </span>
-          </button>
         </div>
+
+        {/* ============ 2) author & teacher contact ============ */}
         <span className="neon-breathe order-3 w-full md:w-auto inline-flex items-center justify-center md:justify-start gap-2 rounded-full px-3.5 py-1.5 border border-neon-400/70 text-neon-300 bg-neon-500/15">
           <IconSparkle className="w-4 h-4 shrink-0" />
           <span className="flex flex-col items-center md:items-start leading-tight text-center md:text-start">
             <span className="text-[12px] font-bold">طراحی توسط امیرعلی</span>
-            <span className="text-[10.5px] font-semibold text-neon-300/80">از شاگردان خانم دکتر آقایی.</span>
+            <span className="text-[10.5px] font-semibold text-neon-300/85">از شاگردان خانم دکتر آقایی.</span>
+            <span className="text-[10px] font-semibold text-neon-300/80 mt-0.5">
+              شماره تماس استاد:{" "}
+              <a
+                href="tel:00971551544988"
+                dir="ltr"
+                className="font-extrabold text-neon-300 underline decoration-neon-400/50 underline-offset-2 hover:text-ink transition-colors"
+              >
+                00971551544988
+              </a>
+            </span>
           </span>
         </span>
       </header>
 
-      {/* simulation stage */}
-      <main className="relative z-10 flex-1 min-h-0">
+      {/* ============ 3) solar system visualization ============ */}
+      <main className="relative z-10 h-[58vh] w-full shrink-0 min-h-[400px] md:h-auto md:min-h-0 md:flex-1">
         <SolarCanvas
           playing={playing}
           speed={speed}
           selectedId={selectedId}
-          onSelect={handleSelect}
           showOrbits={showOrbits}
           showLabels={showLabels}
           showTrails={showTrails}
           resetToken={resetToken}
-          onElapsed={handleElapsed}
+          onSelect={setSelectedId}
+          onElapsed={setElapsed}
         />
 
         {/* first-run hint */}
@@ -227,6 +215,17 @@ export default function App() {
           >
             <IconCursor className="w-5 h-5 text-solar-400 shrink-0" />
             روی خورشید یا هر <span className="glow-amber">سیاره</span> کلیک کنید تا مشخصات و ملودی‌اش را ببینید
+          </button>
+        )}
+
+        {/* mobile audio unlock — shown until the first gesture unlocks the context */}
+        {showUnlockButton && (
+          <button
+            onClick={() => void tryUnlockMusic()}
+            className="absolute z-20 bottom-3 left-3 md:bottom-4 md:left-4 flex items-center gap-2 rounded-full border border-comet/70 bg-space-900/92 px-4 py-2.5 text-[13px] font-extrabold text-comet shadow-[0_0_18px_rgba(111,227,212,0.35)] backdrop-blur-sm transition-transform active:scale-95"
+          >
+            <IconSpeaker className="w-5 h-5" />
+            فعال کردن صدا
           </button>
         )}
 
@@ -261,22 +260,30 @@ export default function App() {
             </>
           )}
         </button>
-
-        <InfoPanel
-          key={selectedId ?? "none"}
-          body={selectedBody}
-          onClose={() => setSelectedId(null)}
-          musicPlaying={musicOn && !!selectedId}
-          musicTitle={musicTitle}
-        />
       </main>
 
-      {/* footer: quick-nav + control dock */}
-      <footer className="relative z-20 shrink-0 w-full pb-[max(10px,env(safe-area-inset-bottom))] pt-1 flex flex-col items-center gap-1.5 md:gap-2 pointer-events-none">
+      {/* ============ 5) selected planet info card
+           (normal document-flow card on mobile, overlay sidebar on desktop) ============ */}
+      <InfoPanel
+        key={selectedId ?? "none"}
+        body={selectedBody}
+        onClose={() => setSelectedId(null)}
+        musicPlaying={musicOn && !!selectedId}
+        musicTitle={musicTitle}
+      />
+
+      {/* ============ 4/6/7/8) planet selector + simulation controls ============ */}
+      <footer
+        className="relative z-20 w-full shrink-0 flex flex-col items-center gap-2 px-2 sm:px-3 md:px-0 pt-1
+          pb-[calc(0.625rem+env(safe-area-inset-bottom))] md:pb-2.5"
+      >
+        {/* 4) planet selector — touch-scrollable, never overlays anything */}
         <div className="pointer-events-auto w-full max-w-full rise-in" style={{ animationDelay: "0.15s" }}>
-          <BodyNav selectedId={selectedId} onSelect={(id) => handleSelect(id)} />
+          <BodyNav selectedId={selectedId} onSelect={setSelectedId} />
         </div>
-        <div className="pointer-events-auto w-full max-w-full px-1.5 md:px-2 rise-in" style={{ animationDelay: "0.22s" }}>
+
+        {/* 6-8) transport / stats / speed / view toggles */}
+        <div className="pointer-events-auto w-full max-w-[1100px] rise-in" style={{ animationDelay: "0.25s" }}>
           <ControlDock
             playing={playing}
             onTogglePlay={togglePlay}
@@ -287,13 +294,27 @@ export default function App() {
             showOrbits={showOrbits}
             showLabels={showLabels}
             showTrails={showTrails}
-            onToggle={onToggle}
+            onToggle={(k) =>
+              k === "orbits" ? setShowOrbits((v) => !v) : k === "labels" ? setShowLabels((v) => !v) : setShowTrails((v) => !v)
+            }
           />
         </div>
-        <p className="pointer-events-none text-[10px] text-ink-faint hidden md:block">
-          کلید Space: پخش/توقف · R: شروع دوباره · Esc: بستن پنل · اندازه‌ها و فاصله‌ها برای نمایش بهتر مقیاس‌بندی شده‌اند
-        </p>
+
+        {/* keyboard hints — desktop only */}
+        <div className="hidden md:flex items-center gap-2 text-[11px] text-ink-faint">
+          <Kbd>Space</Kbd> پخش/توقف
+          <Kbd>R</Kbd> شروع دوباره
+          <Kbd>Esc</Kbd> بستن پنل
+        </div>
       </footer>
     </div>
+  );
+}
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="px-1.5 py-0.5 rounded border border-space-600/70 bg-space-900/70 text-ink-dim text-[10.5px]">
+      {children}
+    </kbd>
   );
 }
