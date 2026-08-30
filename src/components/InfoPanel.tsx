@@ -58,8 +58,8 @@ export function InfoPanel({ body, onClose, musicPlaying, musicTitle }: Props) {
 
   return (
     <aside
-      className="panel-in absolute z-30 inset-x-2 top-2 max-h-[56vh] sm:top-14 sm:max-h-[58%] md:inset-x-auto md:left-4 md:top-16 md:bottom-2 md:max-h-none md:w-[354px]
-        flex flex-col rounded-xl border border-space-600/70 bg-space-900/90 backdrop-blur-md shadow-[0_18px_60px_rgba(0,0,0,0.55)] overflow-hidden"
+      className="panel-in relative z-30 mx-3 mt-3 md:m-0 md:absolute md:inset-x-auto md:left-4 md:top-16 md:bottom-2 md:w-[354px]
+        flex flex-col rounded-2xl md:rounded-xl border border-space-600/70 bg-space-900/90 backdrop-blur-md shadow-[0_18px_60px_rgba(0,0,0,0.55)] overflow-hidden"
       role="dialog"
       aria-label={`مشخصات ${body.name}`}
     >

@@ -36,10 +36,19 @@ body {
   font-family: var(--font-body);
   background: var(--color-space-950);
   color: var(--color-ink);
-  overflow: hidden;
+  /* mobile: the document scrolls vertically like a normal page */
+  overflow-x: hidden;
+  overflow-y: auto;
   font-weight: 500;
   font-size: 15.5px;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* desktop: keep the immersive, viewport-locked app layout */
+@media (min-width: 768px) {
+  body {
+    overflow: hidden;
+  }
 }
 
 /* ---------- glowing readable headings ---------- */

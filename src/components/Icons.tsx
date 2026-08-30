@@ -140,24 +140,6 @@ export function IconCursor({ className, strokeWidth = 1.8 }: IconProps) {
   );
 }
 
-export function IconDownload({ className, strokeWidth = 1.8 }: IconProps) {
-  return (
-    <svg {...base(className)} strokeWidth={strokeWidth}>
-      <path d="M12 4v10.5" />
-      <path d="m7.5 10.5 4.5 4.5 4.5-4.5" />
-      <path d="M4.5 19.5h15" />
-    </svg>
-  );
-}
-
-export function IconCheck({ className, strokeWidth = 2.2 }: IconProps) {
-  return (
-    <svg {...base(className)} strokeWidth={strokeWidth}>
-      <path d="m5 12.5 4.5 4.5L19 7" />
-    </svg>
-  );
-}
-
 export function IconSunMini({ className }: IconProps) {
   return (
     <svg {...base(className)} strokeWidth={1.8}>
@@ -167,23 +149,11 @@ export function IconSunMini({ className }: IconProps) {
   );
 }
 
-export function IconServer({ className, strokeWidth = 1.8 }: IconProps) {
+export function IconSpeaker({ className, strokeWidth = 1.8 }: IconProps) {
   return (
     <svg {...base(className)} strokeWidth={strokeWidth}>
-      <rect x="4" y="4" width="16" height="7" rx="2" />
-      <rect x="4" y="13" width="16" height="7" rx="2" />
-      <circle cx="8" cy="7.5" r="0.9" fill="currentColor" stroke="none" />
-      <circle cx="8" cy="16.5" r="0.9" fill="currentColor" stroke="none" />
-      <path d="M12 7.5h4M12 16.5h4" />
-    </svg>
-  );
-}
-
-export function IconCode({ className, strokeWidth = 1.8 }: IconProps) {
-  return (
-    <svg {...base(className)} strokeWidth={strokeWidth}>
-      <path d="m8 7-5 5 5 5M16 7l5 5-5 5" />
-      <path d="m13.2 4.5-2.4 15" />
+      <path d="M4 9.5v5h3.2L12 18.8V5.2L7.2 9.5H4Z" />
+      <path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.6a7.8 7.8 0 0 1 0 10.8" />
     </svg>
   );
 }

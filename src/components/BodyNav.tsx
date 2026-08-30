@@ -9,7 +9,7 @@ export function BodyNav({ selectedId, onSelect }: Props) {
   return (
     <nav
       aria-label="انتخاب سریع سیاره"
-      className="flex items-center gap-1.5 overflow-x-auto thin-scroll px-3 py-1 max-w-full"
+      className="flex items-center gap-1.5 overflow-x-auto overflow-y-hidden whitespace-nowrap touch-pan-x thin-scroll px-3 py-1.5 max-w-full"
     >
       {BODIES.map((b) => {
         const active = selectedId === b.id;

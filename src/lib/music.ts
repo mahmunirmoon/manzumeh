@@ -145,10 +145,74 @@ function degreeToMidi(tr: TrackDef, deg: number): number {
   return tr.root + tr.scale[idx] + oct * 12;
 }
 
+/* ------------------------------------------------------------------ */
+/* Audio unlock management (mobile browsers keep the context suspended */
+/* until a real user gesture — one stable singleton, never duplicated) */
+/* ------------------------------------------------------------------ */
+let unlocked = false;
+const readyListeners = new Set<(ready: boolean) => void>();
+
+function markUnlocked(v: boolean) {
+  if (unlocked === v) return;
+  unlocked = v;
+  readyListeners.forEach((l) => l(v));
+  /* if music was requested while locked, start it now that we can play */
+  if (v && enabled && timer === null && ctx && ctx.state === "running") {
+    nextTime = ctx.currentTime + 0.08;
+    timer = window.setInterval(tick, TICK);
+  }
+}
+
+/** True when the AudioContext exists and is actually running. */
+export function isAudioReady(): boolean {
+  return !!ctx && ctx.state === "running";
+}
+
+/** Subscribe to unlock state changes (returns an unsubscribe function). */
+export function onAudioReadyChange(cb: (ready: boolean) => void): () => void {
+  readyListeners.add(cb);
+  return () => {
+    readyListeners.delete(cb);
+  };
+}
+
+/**
+ * Must be called from (or right after) a user gesture on mobile.
+ * Creates the context, awaits resume(), catches rejections, and
+ * restarts scheduling if the user already asked for music.
+ */
+export async function tryUnlockMusic(): Promise<boolean> {
+  let c: AudioContext;
+  try {
+    c = ensureGraph();
+  } catch {
+    return false;
+  }
+  if (c.state === "suspended") {
+    try {
+      await c.resume();
+    } catch {
+      /* autoplay policy — not allowed yet, stay quiet */
+    }
+  }
+  const ok = c.state === "running";
+  if (ok) markUnlocked(true);
+  return ok;
+}
+
 function ensureGraph(): AudioContext {
   if (!ctx) {
     const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     ctx = new AC();
+    /* track OS-level suspensions (iOS backgrounding, tab switch, …) */
+    ctx.addEventListener("statechange", () => {
+      if (!ctx) return;
+      if (ctx.state === "running") {
+        markUnlocked(true);
+      } else if (ctx.state === "suspended") {
+        markUnlocked(false);
+      }
+    });
     master = ctx.createGain();
     master.gain.value = 0;
     const comp = ctx.createDynamicsCompressor();
@@ -237,7 +301,7 @@ function scheduleStep(tr: TrackDef, i: number, time: number, spb: number) {
 }
 
 function tick() {
-  if (!ctx || !current) return;
+  if (!ctx || !current || ctx.state !== "running") return;
   const tr = current;
   const spb = 60 / tr.bpm / 4;
   while (nextTime < ctx.currentTime + LOOKAHEAD) {
@@ -264,7 +328,7 @@ export function setTrack(id: string | null): void {
 /** Turn the music on (must be called from a user gesture the first time). */
 export function enableMusic(id: string | null): void {
   const c = ensureGraph();
-  if (c.state === "suspended") void c.resume();
+  if (c.state === "suspended") void c.resume().catch(() => {});
   enabled = true;
   current = null; /* force restart */
   setTrack(id);
