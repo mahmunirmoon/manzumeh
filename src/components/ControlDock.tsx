@@ -49,7 +49,7 @@ function Toggle({
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-[13px] font-bold transition-all duration-200
+      className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-2 min-h-[40px] rounded-full border text-[12.5px] sm:text-[13px] font-bold transition-all duration-200
         ${
           active
             ? "border-solar-400/70 text-solar-300 bg-solar-400/10 shadow-[0_0_14px_rgba(255,194,75,0.15)]"
@@ -67,7 +67,7 @@ export function ControlDock(p: Props) {
   const yearsPerMinute = (p.speed * 60) / 365.25;
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3 px-4 md:px-6 py-3 rounded-2xl border border-space-600/70 bg-space-900/82 backdrop-blur-md shadow-[0_14px_50px_rgba(0,0,0,0.5)]">
+    <div className="flex flex-wrap items-center justify-center gap-x-4 md:gap-x-5 gap-y-2.5 md:gap-y-3 px-3 md:px-6 py-2.5 md:py-3 rounded-2xl border border-space-600/70 bg-space-900/82 backdrop-blur-md shadow-[0_14px_50px_rgba(0,0,0,0.5)]">
       {/* transport */}
       <div className="flex items-center gap-2.5">
         <button
@@ -93,12 +93,12 @@ export function ControlDock(p: Props) {
       </div>
 
       {/* elapsed */}
-      <div className="text-center min-w-[140px]">
-        <div className="font-display text-[32px] leading-none text-solar-300 tabular-nums drop-shadow-[0_0_12px_rgba(255,170,60,0.45)]">
+      <div className="text-center min-w-[120px] md:min-w-[140px]">
+        <div className="font-display text-[26px] md:text-[32px] leading-none text-solar-300 tabular-nums drop-shadow-[0_0_12px_rgba(255,170,60,0.45)]">
           {fmtInt(p.elapsed)}
-          <span className="text-sm font-bold text-ink font-body mr-2">روز گذشته</span>
+          <span className="text-[13px] md:text-sm font-bold text-ink font-body mr-2">روز گذشته</span>
         </div>
-        <div className="text-xs font-bold text-neon-300 mt-1">
+        <div className="text-[11.5px] md:text-xs font-bold text-neon-300 mt-1">
           ≈ {fmt1(p.elapsed / 365.25)} سال زمینی
         </div>
       </div>
@@ -106,7 +106,7 @@ export function ControlDock(p: Props) {
       <div className="hidden md:block w-px h-10 bg-space-600/60" />
 
       {/* speed */}
-      <div className="flex flex-col gap-1.5 w-56">
+      <div className="flex flex-col gap-1.5 w-full sm:w-56">
         <div className="flex items-center justify-between text-[13px] font-bold">
           <span className="text-ink">سرعت شبیه‌سازی</span>
           <span className="text-solar-300 font-extrabold text-[14px]">
@@ -130,7 +130,7 @@ export function ControlDock(p: Props) {
               <button
                 key={v}
                 onClick={() => p.onSpeedChange(v)}
-                className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${
+                className={`px-2 py-1 md:py-0.5 min-h-[28px] rounded text-[11.5px] md:text-[11px] font-bold border transition-colors ${
                   Math.abs(p.speed - v) < 0.01
                     ? "border-solar-400/70 text-solar-300 bg-solar-400/10"
                     : "border-space-600/60 text-ink-faint hover:text-ink"

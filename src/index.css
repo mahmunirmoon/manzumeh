@@ -25,6 +25,11 @@
 
 html {
   color-scheme: dark;
+  overflow-x: hidden;
+}
+
+html, body {
+  overscroll-behavior: none;
 }
 
 body {
@@ -34,6 +39,7 @@ body {
   overflow: hidden;
   font-weight: 500;
   font-size: 15.5px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ---------- glowing readable headings ---------- */

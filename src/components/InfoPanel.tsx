@@ -58,25 +58,25 @@ export function InfoPanel({ body, onClose, musicPlaying, musicTitle }: Props) {
 
   return (
     <aside
-      className="panel-in absolute z-30 inset-x-2 top-14 max-h-[58%] md:inset-x-auto md:left-4 md:top-16 md:bottom-2 md:max-h-none md:w-[354px]
-        flex flex-col rounded-xl border border-space-600/70 bg-space-900/88 backdrop-blur-md shadow-[0_18px_60px_rgba(0,0,0,0.55)] overflow-hidden"
+      className="panel-in absolute z-30 inset-x-2 top-2 max-h-[56vh] sm:top-14 sm:max-h-[58%] md:inset-x-auto md:left-4 md:top-16 md:bottom-2 md:max-h-none md:w-[354px]
+        flex flex-col rounded-xl border border-space-600/70 bg-space-900/90 backdrop-blur-md shadow-[0_18px_60px_rgba(0,0,0,0.55)] overflow-hidden"
       role="dialog"
       aria-label={`مشخصات ${body.name}`}
     >
       {/* header */}
-      <div className="relative p-5 pb-4 flex items-center gap-4" style={{ background: `linear-gradient(180deg, ${body.color}1f, transparent)` }}>
-        <div className="relative w-16 h-16 shrink-0">
-          <div className="w-16 h-16 rounded-full" style={discStyle} />
+      <div className="relative p-4 md:p-5 pb-3 md:pb-4 flex items-center gap-3 md:gap-4" style={{ background: `linear-gradient(180deg, ${body.color}1f, transparent)` }}>
+        <div className="relative w-14 h-14 md:w-16 md:h-16 shrink-0">
+          <div className="w-14 h-14 md:w-16 md:h-16 rounded-full" style={discStyle} />
           {body.ring && (
             <div
-              className="absolute inset-0 m-auto w-[104px] h-[104px] rounded-[50%] border-2 pointer-events-none"
+              className="absolute inset-0 m-auto w-[90px] h-[90px] md:w-[104px] md:h-[104px] rounded-[50%] border-2 pointer-events-none"
               style={{ borderColor: `${body.color}aa`, transform: "rotate(-24deg) scaleY(0.42)" }}
             />
           )}
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 pe-9">
           <h2
-            className="font-display text-[44px] leading-none"
+            className="font-display text-[34px] md:text-[44px] leading-none"
             style={{ color: body.color, textShadow: `0 0 24px ${body.color}88, 0 2px 0 rgba(20,4,40,0.6)` }}
           >
             {body.name}
@@ -108,14 +108,14 @@ export function InfoPanel({ body, onClose, musicPlaying, musicTitle }: Props) {
         <button
           onClick={onClose}
           aria-label="بستن"
-          className="absolute top-3 left-3 w-8 h-8 grid place-items-center rounded-full text-ink-dim hover:text-ink hover:bg-space-600/60 transition-colors"
+          className="absolute top-2.5 left-2.5 w-10 h-10 grid place-items-center rounded-full text-ink-dim hover:text-ink hover:bg-space-600/60 transition-colors"
         >
-          <IconClose className="w-4 h-4" />
+          <IconClose className="w-5 h-5" />
         </button>
       </div>
 
       {/* stats */}
-      <div className="flex-1 min-h-0 overflow-y-auto thin-scroll px-5 pb-4">
+      <div className="flex-1 min-h-0 overflow-y-auto thin-scroll px-4 md:px-5 pb-6 md:pb-4">
         <StatRow
           icon={<IconRuler />}
           label="قطر"

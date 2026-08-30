@@ -189,7 +189,8 @@ function SolarCanvasInner(props: SolarCanvasProps) {
     };
     const targetScale = () => {
       const availW = sim.w - (panelOpen() && sim.w >= 1024 ? 360 : 0);
-      return clamp((Math.min(availW, sim.h) / 2 - 32) / MAX_ORBIT, 0.26, 1.15);
+      const margin = sim.w < 640 ? 18 : 32;
+      return clamp((Math.min(availW, sim.h) / 2 - margin) / MAX_ORBIT, 0.26, 1.15);
     };
 
     const bodyAngle = (periodDays: number, phase: number) =>
