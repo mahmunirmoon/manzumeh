@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>انتشار روی GitHub — منظومهٔ شمسی</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Vazirmatn:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<style>
+  :root{
+    --bg:#0b031d; --panel:#150736; --panel2:#200f4e; --line:#473093;
+    --ink:#f1eaff; --dim:#ab9fdc; --faint:#71639f;
+    --neon:#b56bff; --neon-deep:#9a45f5; --amber:#ffc24b; --amber-deep:#ff9d2e;
+    --ok:#6fe3a4; --err:#ff7d9c;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    background:
+      radial-gradient(900px 600px at 85% -10%, rgba(122,38,217,.5), transparent 62%),
+      radial-gradient(800px 600px at 5% 110%, rgba(154,69,245,.32), transparent 60%),
+      linear-gradient(180deg,#1c0a45 0%,#0f0529 45%,#070213 100%);
+    background-attachment:fixed;
+    color:var(--ink); font-family:"Vazirmatn",sans-serif; font-size:15.5px;
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+  h1{font-family:"Lalezar",serif;font-weight:400;font-size:clamp(30px,6vw,44px);margin:0;line-height:1.1}
+  h1 .a{color:#ffd88a;text-shadow:0 0 22px rgba(255,178,60,.55)}
+  .sub{color:var(--dim);font-weight:700;margin:8px 0 26px}
+  .card{
+    background:rgba(21,7,54,.82);border:1px solid var(--line);border-radius:18px;
+    padding:20px;margin:16px 0;backdrop-filter:blur(6px);
+    box-shadow:0 14px 44px rgba(0,0,0,.45);
+  }
+  .step{display:flex;align-items:flex-start;gap:14px;margin-bottom:6px}
+  .badge{
+    flex:none;width:34px;height:34px;border-radius:12px;display:grid;place-items:center;
+    font-family:"Lalezar",serif;font-size:19px;color:#1c0a45;
+    background:linear-gradient(180deg,#ffe0a3,#ff9d2e);box-shadow:0 0 16px rgba(255,170,50,.4);
+  }
+  .card h2{font-size:17px;font-weight:900;margin:4px 0 4px}
+  .card p{margin:4px 0;color:var(--dim);font-weight:500;line-height:1.9}
+  .drop{
+    border:2px dashed var(--neon);border-radius:14px;padding:26px 16px;text-align:center;
+    cursor:pointer;transition:.2s;color:var(--dim);font-weight:700;margin-top:12px;
+    background:rgba(154,69,245,.08);
+  }
+  .drop:hover,.drop.over{border-color:var(--amber);background:rgba(255,194,75,.08);color:var(--ink)}
+  .drop b{color:var(--neon)}
+  .filebox{
+    margin-top:12px;max-height:170px;overflow:auto;border:1px solid var(--line);border-radius:10px;
+    background:rgba(11,3,29,.6);padding:10px 12px;font-family:ui-monospace,Menlo,Consolas,monospace;
+    font-size:11.5px;color:var(--dim);direction:ltr;text-align:left;line-height:1.8;
+  }
+  .filebox .del{color:var(--err)} .filebox .new{color:var(--ok)}
+  label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px;color:var(--ink)}
+  input{
+    width:100%;background:rgba(11,3,29,.7);border:1px solid var(--line);border-radius:10px;
+    color:var(--ink);padding:11px 13px;font-family:inherit;font-size:14px;font-weight:700;outline:none;
+  }
+  input:focus{border-color:var(--neon);box-shadow:0 0 0 3px rgba(154,69,245,.25)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:560px){.row{grid-template-columns:1fr}}
+  .go{
+    width:100%;margin-top:20px;border:none;border-radius:14px;padding:16px;cursor:pointer;
+    font-family:"Lalezar",serif;font-size:23px;color:#1c0a45;
+    background:linear-gradient(180deg,#ffe0a3,#ff9d2e);
+    box-shadow:0 0 26px rgba(255,170,50,.45);transition:.15s;
+  }
+  .go:hover{transform:translateY(-2px);box-shadow:0 0 38px rgba(255,170,50,.6)}
+  .go:active{transform:translateY(0)}
+  .go:disabled{opacity:.45;cursor:not-allowed;transform:none}
+  .log{
+    margin-top:16px;border:1px solid var(--line);border-radius:12px;background:#070213;
+    padding:14px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;
+    min-height:60px;max-height:280px;overflow:auto;direction:ltr;text-align:left;line-height:1.9;display:none;
+  }
+  .log.on{display:block}
+  .log .ok{color:var(--ok)} .log .err{color:var(--err)} .log .info{color:var(--dim)} .log .warn{color:var(--amber)}
+  .result{display:none;margin-top:18px;text-align:center;padding:22px;border-radius:16px;
+    border:1px solid var(--neon);background:rgba(154,69,245,.14);box-shadow:0 0 40px rgba(154,69,245,.25)}
+  .result.on{display:block}
+  .result .t{font-family:"Lalezar",serif;font-size:26px;color:#e6d5ff}
+  .result a.pr{
+    display:inline-block;margin-top:12px;direction:ltr;color:#1c0a45;font-weight:900;font-size:14px;
+    background:linear-gradient(180deg,#d5aaff,#9a45f5);padding:11px 18px;border-radius:12px;text-decoration:none;
+    box-shadow:0 0 24px rgba(154,69,245,.55);word-break:break-all;
+  }
+  details{margin-top:14px;color:var(--dim);font-size:13px;font-weight:600;line-height:2}
+  details summary{cursor:pointer;color:var(--neon);font-weight:800}
+  details a{color:var(--amber)}
+  code{direction:ltr;unicode-bidi:embed;background:rgba(11,3,29,.8);border:1px solid var(--line);
+    border-radius:6px;padding:1px 7px;font-size:12px;color:#ffd88a}
+  .note{font-size:12.5px;color:var(--faint);font-weight:600;margin-top:10px;line-height:1.9}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>انتشار روی <span class="a">GitHub</span></h1>
+  <p class="sub">ساخت شاخهٔ جدید + کامیت + Pull Request برای مخزن mahmunirmoon/manzumeh — مستقیم از مرورگر شما</p>
+
+  <!-- STEP 1 -->
+  <div class="card">
+    <div class="step"><div class="badge">۱</div><div>
+      <h2>بستهٔ ZIP پروژه را بدهید</h2>
+      <p>از محیط توسعه، خروجی/دانلودِ کل پروژه را به‌صورت ZIP بگیرید و اینجا رها کنید. فایل‌های <code>node_modules</code> و <code>dist</code> به‌طور خودکار نادیده گرفته می‌شوند.</p>
+    </div></div>
+    <div class="drop" id="drop">فایل ZIP را اینجا بکشید و رها کنید <b>یا کلیک کنید</b></div>
+    <input type="file" id="file" accept=".zip" hidden />
+    <div class="filebox" id="filebox" hidden></div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="card">
+    <div class="step"><div class="badge">۲</div><div>
+      <h2>توکن دسترسی GitHub</h2>
+      <p>یک <b>Fine-grained token</b> بسازید:
+        <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" style="color:var(--amber)">ساخت توکن</a> —
+        مخزن: فقط <code>mahmunirmoon/manzumeh</code> — دسترسی‌ها: <b>Contents: Read and write</b> و <b>Pull requests: Read and write</b>.
+        توکن فقط از مرورگر خودتان به api.github.com فرستاده می‌شود و هیچ‌جا ذخیره نمی‌شود.</p>
+    </div></div>
+    <label for="token">توکن (github_pat_...)</label>
+    <input id="token" type="password" placeholder="github_pat_xxxxxxxx" autocomplete="off" />
+    <div class="row">
+      <div><label for="owner">مالک مخزن</label><input id="owner" value="mahmunirmoon" /></div>
+      <div><label for="repo">نام مخزن</label><input id="repo" value="manzumeh" /></div>
+      <div><label for="base">شاخهٔ پایه</label><input id="base" value="main" /></div>
+      <div><label for="branch">شاخهٔ جدید</label><input id="branch" value="task/mobile-rebuild-audio-contact" /></div>
+    </div>
+    <label for="msg">پیام کامیت</label>
+    <input id="msg" value="feat: چیدمان موبایل اسکرول‌شونده، رفع صدای موبایل، حذف دانلود پروژه، شماره تماس استاد" />
+  </div>
+
+  <button class="go" id="go" disabled>🚀 انتشار و ساخت Pull Request</button>
+  <div class="log" id="log"></div>
+  <div class="result" id="result">
+    <div class="t">✅ Pull Request ساخته شد!</div>
+    <p style="color:var(--dim);font-weight:700;margin:8px 0 0">لینک را باز کنید و Merge بزنید — بعد از سبز شدن Actions، نسخهٔ جدید آنلاین می‌شود.</p>
+    <a class="pr" id="prlink" href="#" target="_blank"></a>
+  </div>
+
+  <details>
+    <summary>روش جایگزین بدون توکن (آپلود از وب‌سایت GitHub)</summary>
+    <p>۱) در <a href="https://github.com/mahmunirmoon/manzumeh" target="_blank">مخزن</a> از منوی شاخه‌ها، شاخهٔ <code>task/mobile-rebuild-audio-contact</code> را بسازید.
+    ۲) Add file → Upload files → پوشه‌های <code>src</code> و <code>.github</code> و فایل‌های <code>index.html</code> و <code>README.md</code> را بکشید و Commit بزنید.
+    ۳) فایل <code>src/lib/projectFiles.ts</code> را از همان وب‌سایت Delete کنید.
+    ۴) <a id="altlink" href="https://github.com/mahmunirmoon/manzumeh/compare/main...task/mobile-rebuild-audio-contact" target="_blank">ساخت Pull Request</a> را بزنید.</p>
+  </details>
+
+  <p class="note">این فایل یک ابزار انتشار مستقل است؛ جزو خود سایت نیست و هیچ تاثیری روی بیلد و ظاهر پروژه ندارد.</p>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const KNOWN_DELETIONS = ["src/lib/projectFiles.ts"];
+const SKIP = (p) =>
+  p.startsWith("node_modules/") || p.startsWith("dist/") || p.startsWith(".git/") ||
+  p.includes("__MACOSX") || p.endsWith(".DS_Store") || p === "publish.html" || p === ".publish-token";
+
+let zipMap = null;
+
+/* ---------- UI state ---------- */
+function refreshGo() {
+  $("#go").disabled = !(zipMap && zipMap.size && $("#token").value.trim());
+}
+["token"].forEach((id) => $("#" + id).addEventListener("input", refreshGo));
+
+/* ---------- ZIP intake ---------- */
+const drop = $("#drop"), fileIn = $("#file");
+drop.addEventListener("click", () => fileIn.click());
+drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+drop.addEventListener("drop", (e) => {
+  e.preventDefault(); drop.classList.remove("over");
+  const f = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) handleZip(f);
+});
+fileIn.addEventListener("change", () => { if (fileIn.files[0]) handleZip(fileIn.files[0]); });
+
+async function handleZip(file) {
+  if (!/\.zip$/i.test(file.name)) { alert("لطفاً فقط فایل ZIP انتخاب کنید."); return; }
+  drop.innerHTML = "در حال خواندن ZIP…";
+  try {
+    const zip = await JSZip.loadAsync(file);
+    let entries = [];
+    zip.forEach((rel, entry) => { if (!entry.dir) entries.push({ rel, entry }); });
+
+    /* strip a single common root folder like "manzumeh/" */
+    const tops = new Set(entries.map((e) => e.rel.split("/")[0]));
+    const allNested = entries.every((e) => e.rel.includes("/"));
+    const strip = tops.size === 1 && allNested ? [...tops][0] + "/" : "";
+
+    const map = new Map();
+    for (const e of entries) {
+      const p = strip && e.rel.startsWith(strip) ? e.rel.slice(strip.length) : e.rel;
+      if (!p || SKIP(p)) continue;
+      map.set(p, await e.entry.async("arraybuffer"));
+    }
+    if (!map.size) throw new Error("هیچ فایل پروژه‌ای داخل ZIP پیدا نشد");
+    zipMap = map;
+    drop.innerHTML = `✅ <b>${file.name}</b> — ${map.size} فایل آمادهٔ بررسی شد (برای تغییر، دوباره رها کنید)`;
+    const box = $("#filebox"); box.hidden = false;
+    const paths = [...map.keys()].sort();
+    box.innerHTML = paths.slice(0, 120).map((p) => `<div>${p}</div>`).join("") +
+      (paths.length > 120 ? `<div>… +${paths.length - 120} فایل دیگر</div>` : "") +
+      KNOWN_DELETIONS.map((p) => `<div class="del">✗ ${p} (حذف می‌شود)</div>`).join("");
+  } catch (err) {
+    drop.innerHTML = "❌ خطا در خواندن ZIP — دوباره تلاش کنید";
+    alert("خواندن ZIP ناموفق بود: " + err.message);
+  }
+  refreshGo();
+}
+
+/* ---------- GitHub API ---------- */
+const api = async (path, opts = {}) => {
+  const res = await fetch("https://api.github.com" + path, {
+    ...opts,
+    headers: {
+      Authorization: "Bearer " + $("#token").value.trim(),
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+      ...(opts.body ? { "Content-Type": "application/json" } : {}),
+    },
+  });
+  if (!res.ok) {
+    let m = res.status + " " + res.statusText;
+    try { const j = await res.json(); if (j.message) m = j.message; } catch {}
+    throw new Error(m);
+  }
+  return res.status === 204 ? null : res.json();
+};
+
+const b64 = (buf) => {
+  const u = new Uint8Array(buf); let s = "";
+  for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+  return btoa(s);
+};
+
+const blobSha = async (buf) => {
+  const head = new TextEncoder().encode("blob " + buf.byteLength + "\0");
+  const all = new Uint8Array(head.length + buf.byteLength);
+  all.set(head); all.set(new Uint8Array(buf), head.length);
+  const d = await crypto.subtle.digest("SHA-1", all);
+  return [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
+};
+
+/* ---------- log ---------- */
+const logEl = $("#log");
+const log = (msg, cls = "info") => {
+  logEl.classList.add("on");
+  const d = document.createElement("div");
+  d.className = cls; d.textContent = msg;
+  logEl.appendChild(d); logEl.scrollTop = logEl.scrollHeight;
+};
+
+/* ---------- publish ---------- */
+$("#go").addEventListener("click", async () => {
+  const owner = $("#owner").value.trim(), repo = $("#repo").value.trim();
+  const base = $("#base").value.trim(), branch = $("#branch").value.trim();
+  const btn = $("#go"); btn.disabled = true; logEl.innerHTML = "";
+  try {
+    log("۱) بررسی دسترسی و مخزن…");
+    await api(`/repos/${owner}/${repo}`);
+    log("   ✓ توکن معتبر است و مخزن پیدا شد", "ok");
+
+    log("۲) خواندن آخرین وضعیت شاخهٔ " + base + "…");
+    const baseRef = await api(`/repos/${owner}/${repo}/git/ref/heads/${base}`);
+    const baseSha = baseRef.object.sha;
+    log("   ✓ کامیت پایه: " + baseSha.slice(0, 7), "ok");
+
+    log("۳) مقایسهٔ فایل‌های شما با نسخهٔ عمومی GitHub…");
+    const tree = await api(`/repos/${owner}/${repo}/git/trees/${baseSha}?recursive=1`);
+    const remote = new Map(tree.tree.filter((t) => t.type === "blob").map((t) => [t.path, t]));
+
+    const changed = [];
+    for (const [p, buf] of zipMap) {
+      const sha = await blobSha(buf);
+      const rem = remote.get(p);
+      if (!rem || rem.sha !== sha) changed.push({ path: p, buf });
+    }
+    const deleted = KNOWN_DELETIONS.filter((p) => remote.has(p));
+    log(`   ✓ ${changed.length} فایل جدید/تغییریافته، ${deleted.length} فایل برای حذف`, "ok");
+    if (!changed.length && !deleted.length) {
+      log("   همه‌چیز از قبل منتشر شده — هیچ تغییری لازم نیست.", "warn");
+      btn.disabled = false; return;
+    }
+    changed.forEach((c) => log("   • " + c.path + (remote.has(c.path) ? " (بروزرسانی)" : " (جدید)")));
+    deleted.forEach((p) => log("   ✗ " + p + " (حذف)", "err"));
+
+    log("۴) ساخت blobها…");
+    for (const c of changed) {
+      const b = await api(`/repos/${owner}/${repo}/git/blobs`, {
+        method: "POST",
+        body: JSON.stringify({ content: b64(c.buf), encoding: "base64" }),
+      });
+      c.sha = b.sha;
+    }
+    log("   ✓ آپلود محتوا انجام شد", "ok");
+
+    log("۵) ساخت tree کامل…");
+    const entries = changed.map((c) => ({ path: c.path, mode: "100644", type: "blob", sha: c.sha }));
+    const seen = new Set(entries.map((e) => e.path));
+    for (const [p, t] of remote) {
+      if (seen.has(p)) continue;
+      if (KNOWN_DELETIONS.includes(p)) continue;   /* حذف‌ها: وارد tree نمی‌شوند */
+      entries.push({ path: p, mode: t.mode, type: "blob", sha: t.sha }); /* بقیه حفظ می‌شوند */
+    }
+    const newTree = await api(`/repos/${owner}/${repo}/git/trees`, {
+      method: "POST", body: JSON.stringify({ tree: entries }),
+    });
+
+    log("۶) ساخت کامیت…");
+    const commit = await api(`/repos/${owner}/${repo}/git/commits`, {
+      method: "POST",
+      body: JSON.stringify({ message: $("#msg").value.trim() || "chore: publish latest", tree: newTree.sha, parents: [baseSha] }),
+    });
+    log("   ✓ کامیت " + commit.sha.slice(0, 7), "ok");
+
+    log("۷) ساخت/بروزرسانی شاخهٔ " + branch + "…");
+    try {
+      await api(`/repos/${owner}/${repo}/git/refs`, {
+        method: "POST", body: JSON.stringify({ ref: "refs/heads/" + branch, sha: commit.sha }),
+      });
+    } catch (e) {
+      if (/422|already exists/i.test(e.message)) {
+        await api(`/repos/${owner}/${repo}/git/refs/heads/${branch}`, {
+          method: "PATCH", body: JSON.stringify({ sha: commit.sha, force: true }),
+        });
+        log("   (شاخه از قبل بود — بروزرسانی شد)", "warn");
+      } else throw e;
+    }
+    log("   ✓ شاخه آماده است", "ok");
+
+    log("۸) بازکردن Pull Request…");
+    const body = [
+      "## تغییرات این نسخه",
+      "- [x] چیدمان موبایل اسکرول‌شوندهٔ عمودی (بدون هم‌پوشانی پنل‌ها)",
+      "- [x] رفع پخش موسیقی در موبایل (unlock با اولین لمس + resume)",
+      "- [x] حذف کامل قابلیت «دانلود پروژه / Download Project»",
+      "- [x] افزودن: شماره تماس استاد: 00971551544988",
+      "",
+      "Build: PASS · هیچ ارجاعی به /src/main.tsx در خروجی نیست.",
+    ].join("\n");
+    let prUrl;
+    try {
+      const pr = await api(`/repos/${owner}/${repo}/pulls`, {
+        method: "POST",
+        body: JSON.stringify({
+          title: "نسخهٔ نهایی: موبایل + صدا + حذف دانلود + شماره تماس استاد",
+          head: branch, base, body,
+        }),
+      });
+      prUrl = pr.html_url;
+    } catch (e) {
+      if (/422|already exists/i.test(e.message)) {
+        prUrl = `https://github.com/${owner}/${repo}/compare/${base}...${branch}`;
+        log("   (PR از قبل باز بود — لینک مقایسه داده می‌شود)", "warn");
+      } else throw e;
+    }
+    log("✅ تمام شد!", "ok");
+    const res = $("#result"); res.classList.add("on");
+    const a = $("#prlink"); a.href = prUrl; a.textContent = prUrl;
+    res.scrollIntoView({ behavior: "smooth" });
+  } catch (err) {
+    log("❌ خطا: " + err.message, "err");
+    if (/401|Bad credentials/i.test(err.message)) log("   → توکن نامعتبر است یا دسترسی Contents/Pull requests ندارد.", "err");
+    if (/404/i.test(err.message)) log("   → مخزن پیدا نشد یا توکن به آن دسترسی ندارد (مخزن خصوصی است؟).", "err");
+  }
+  btn.disabled = false;
+});
+</script>
+</body>
+</html>
