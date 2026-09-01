@@ -1,0 +1,72 @@
+/*
+  Small defensive mobile layer for the existing Manzumeh layout.
+  The app already has a mobile-first vertical flow; these rules only harden
+  touch targets, safe areas, overflow handling and dialog sizing.
+*/
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+}
+
+#root {
+  min-height: 100dvh;
+  overflow-x: clip;
+}
+
+button,
+a,
+input[type="range"] {
+  touch-action: manipulation;
+}
+
+@media (max-width: 767px) {
+  /* Keep all interactive controls comfortably tappable. */
+  button,
+  a[href] {
+    min-height: 42px;
+  }
+
+  /* Prevent long labels/numbers from creating horizontal page overflow. */
+  [role="dialog"],
+  aside {
+    max-width: calc(100vw - 1rem);
+  }
+
+  /* Preserve vertical scrolling on short phones and landscape phones. */
+  body {
+    min-height: 100dvh;
+    overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* The simulation remains large enough to use, but avoids consuming
+     an excessive amount of a very short landscape viewport. */
+  @media (max-height: 520px) {
+    #root main {
+      min-height: 330px !important;
+      height: 72vh !important;
+    }
+  }
+
+  .manzumeh-help-overlay {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .manzumeh-help-card {
+    max-height: calc(100dvh - 1.5rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+/* Desktop keeps the existing immersive locked layout. */
+@media (min-width: 768px) {
+  .manzumeh-help-card {
+    max-height: calc(100dvh - 3rem);
+    overflow-y: auto;
+  }
+}
